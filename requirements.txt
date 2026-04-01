@@ -1,28 +1,35 @@
-# Core ML
+# ── Demo parsing ──────────────────────────────────────────────────────────
+demoparser2>=1.5.0
+awpy>=2.0.0
+
+# ── Core ML ───────────────────────────────────────────────────────────────
 torch>=2.2.0
 numpy>=1.26.0
 pandas>=2.2.0
 scikit-learn>=1.4.0
 
-# Demo parsing
-demoparser2>=1.5.0
-
-# Data storage
+# ── Data storage ──────────────────────────────────────────────────────────
 pyarrow>=15.0.0
 fastparquet>=2024.2.0
 
-# Config
+# ── Config ────────────────────────────────────────────────────────────────
 pyyaml>=6.0.1
 omegaconf>=2.3.0
 
-# Experiment tracking
+# ── Experiment tracking ───────────────────────────────────────────────────
 tensorboard>=2.16.0
 
-# Dev / notebooks
+# ── Real-time / dashboard ─────────────────────────────────────────────────
+streamlit>=1.33.0
+onnxruntime>=1.17.0
+
+# ── Dev / notebooks ───────────────────────────────────────────────────────
 jupyter>=1.0.0
 matplotlib>=3.8.0
 seaborn>=0.13.0
 ipykernel>=6.29.0
+tqdm>=4.66.0
 
-# Testing
+# ── Testing ───────────────────────────────────────────────────────────────
 pytest>=8.0.0
+pytest-cov>=5.0.0

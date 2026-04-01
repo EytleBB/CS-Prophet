@@ -1,22 +1,29 @@
 model:
-  input_dim: 64
-  d_model: 128
-  nhead: 4
-  num_layers: 3
+  input_dim: 84        # 10 players × 7 features (x,y,z,hp,armor,helmet,alive) = 70 + map_zone_onehot(4) + padding
+  d_model: 256
+  nhead: 8
+  num_layers: 4
   dropout: 0.1
+  num_classes: 3       # A / B / other
 
 training:
-  epochs: 50
-  batch_size: 64
+  epochs: 100
+  batch_size: 32
+  gradient_accumulation_steps: 4
   learning_rate: 1.0e-4
   weight_decay: 1.0e-5
   val_split: 0.1
   seed: 42
+  use_amp: true        # mixed-precision (torch.cuda.amp)
+  focal_loss_gamma: 2.0
 
 data:
-  raw_dir: data/raw
+  raw_dir: data/raw/demos
   processed_dir: data/processed
-  sequence_length: 128
+  splits_dir: data/splits
+  sequence_length: 240  # 30 s × 8 ticks/s
+  tick_rate: 64
+  target_tick_rate: 8
 
 logging:
   log_dir: runs/
