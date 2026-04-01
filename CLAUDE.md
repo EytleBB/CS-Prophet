@@ -13,11 +13,11 @@ CS_Prophet/
 │   ├── processed/        ← per-demo parquet files
 │   └── splits/           ← train / val / test splits
 ├── src/
-│   ├── parser/           ← demo_parser.py (Phase 1 ✓)
-│   ├── features/         ← label_extractor.py (Phase 1 ✓), state_vector.py (Phase 2)
+│   ├── parser/           ← demo_parser.py (Phase 1)
+│   ├── features/         ← label_extractor.py (Phase 1), state_vector.py (Phase 2)
 │   ├── model/            ← transformer.py (Phase 2), attention.py (Phase 2), train.py (Phase 2)
 │   ├── inference/        ← onnx_export.py, realtime_engine.py (Phase 3)
-│   └── utils/            ← map_utils.py (Phase 1 ✓)
+│   └── utils/            ← map_utils.py (Phase 1)
 ├── dashboard/            ← app.py (Phase 3)
 ├── configs/              ← train_config.yaml
 ├── notebooks/            ← 01_eda.ipynb
