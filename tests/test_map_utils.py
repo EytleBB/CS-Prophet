@@ -38,6 +38,22 @@ class TestClassifyZone:
         # Central ancient mid — x in [-180,930], y in [-690,370]
         assert classify_zone(375.0, -160.0, "de_ancient") == "mid"
 
+    def test_a_site_overpass(self):
+        # Centre of overpass A — x in [-1,1200], y in [700,1800]
+        assert classify_zone(600.0, 1250.0, "de_overpass") == "A"
+
+    def test_b_site_overpass(self):
+        # Centre of overpass B — x in [-1900,-700], y in [-900,200]
+        assert classify_zone(-1300.0, -350.0, "de_overpass") == "B"
+
+    def test_a_site_anubis(self):
+        # Centre of anubis A — x in [1400,2600], y in [-200,700]
+        assert classify_zone(2000.0, 250.0, "de_anubis") == "A"
+
+    def test_b_site_anubis(self):
+        # Centre of anubis B — x in [-500,600], y in [-1000,-100]
+        assert classify_zone(50.0, -550.0, "de_anubis") == "B"
+
 
 class TestNormalizeCoords:
     def test_output_in_unit_cube_mirage(self):
