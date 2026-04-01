@@ -1,0 +1,24 @@
+model:
+  input_dim: 64
+  d_model: 128
+  nhead: 4
+  num_layers: 3
+  dropout: 0.1
+
+training:
+  epochs: 50
+  batch_size: 64
+  learning_rate: 1.0e-4
+  weight_decay: 1.0e-5
+  val_split: 0.1
+  seed: 42
+
+data:
+  raw_dir: data/raw
+  processed_dir: data/processed
+  sequence_length: 128
+
+logging:
+  log_dir: runs/
+  save_dir: checkpoints/
+  log_interval: 10
