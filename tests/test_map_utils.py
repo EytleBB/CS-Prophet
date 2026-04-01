@@ -30,6 +30,14 @@ class TestClassifyZone:
     def test_a_site_dust2(self):
         assert classify_zone(1300.0, 2200.0, "de_dust2") == "A"
 
+    def test_b_site_nuke(self):
+        # Centre of nuke B — x in [-900,-280], y in [230,1130]
+        assert classify_zone(-600.0, 680.0, "de_nuke") == "B"
+
+    def test_mid_ancient(self):
+        # Central ancient mid — x in [-180,930], y in [-690,370]
+        assert classify_zone(375.0, -160.0, "de_ancient") == "mid"
+
 
 class TestNormalizeCoords:
     def test_output_in_unit_cube_mirage(self):
