@@ -12,6 +12,8 @@ class PositionalEncoding(nn.Module):
 
     def __init__(self, d_model: int, dropout: float = 0.1, max_len: int = 300) -> None:
         super().__init__()
+        if d_model % 2 != 0:
+            raise ValueError(f"d_model must be even for sinusoidal encoding; got {d_model}")
         self.dropout = nn.Dropout(p=dropout)
 
         pe = torch.zeros(max_len, d_model)
@@ -45,15 +47,21 @@ class CrossAttentionLayer(nn.Module):
         self.norm = nn.LayerNorm(d_model)
         self.dropout = nn.Dropout(p=dropout)
 
-    def forward(self, query: torch.Tensor, key_value: torch.Tensor) -> torch.Tensor:
+    def forward(
+        self,
+        query: torch.Tensor,
+        key_value: torch.Tensor,
+        key_padding_mask: torch.Tensor | None = None,
+    ) -> torch.Tensor:
         """Compute cross-attention with residual connection.
 
         Args:
             query: (batch, seq_len, d_model) — T-side representation.
             key_value: (batch, seq_len, d_model) — CT-side representation.
+            key_padding_mask: (batch, seq_len) bool mask; True = ignore position.
 
         Returns:
             (batch, seq_len, d_model) — query enriched with CT context.
         """
-        attn_out, _ = self.attn(query, key_value, key_value)
+        attn_out, _ = self.attn(query, key_value, key_value, key_padding_mask=key_padding_mask)
         return self.norm(query + self.dropout(attn_out))

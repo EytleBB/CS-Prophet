@@ -1,7 +1,6 @@
 """Tests for PositionalEncoding and CrossAttentionLayer."""
 
 import torch
-import pytest
 from src.model.attention import CrossAttentionLayer, PositionalEncoding
 
 
@@ -30,6 +29,11 @@ class TestPositionalEncoding:
         x = torch.randn(1, 240, 32)
         out = pe(x)
         assert out.shape == (1, 240, 32)
+
+    def test_odd_d_model_raises(self):
+        import pytest
+        with pytest.raises(ValueError, match="even"):
+            PositionalEncoding(d_model=65)
 
 
 class TestCrossAttentionLayer:
@@ -64,3 +68,11 @@ class TestCrossAttentionLayer:
         kv = torch.randn(1, 240, 64)
         out = layer(q, kv)
         assert out.shape == (1, 240, 64)
+
+    def test_key_padding_mask_accepted(self):
+        layer = CrossAttentionLayer(d_model=64, nhead=4, dropout=0.0)
+        q = torch.randn(2, 10, 64)
+        kv = torch.randn(2, 10, 64)
+        mask = torch.zeros(2, 10, dtype=torch.bool)  # all False = no masking
+        out = layer(q, kv, key_padding_mask=mask)
+        assert out.shape == q.shape
