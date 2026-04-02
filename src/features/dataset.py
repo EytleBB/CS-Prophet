@@ -52,7 +52,7 @@ class RoundSequenceDataset(Dataset):
 
     Each item is ``(sequence_tensor, label)`` where:
     - ``sequence_tensor``: float32 of shape ``(sequence_length, FEATURE_DIM)``
-    - ``label``: int — 0=A, 1=B, 2=other
+    - ``label``: torch.Tensor (dtype=torch.long) — 0=A, 1=B, 2=other
 
     Sequences shorter than ``sequence_length`` are zero-padded at the end.
     Sequences longer than ``sequence_length`` are truncated.

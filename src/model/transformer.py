@@ -86,5 +86,10 @@ class BombSiteTransformer(nn.Module):
         # Self-attention encoder
         out = self.encoder(t_emb, src_key_padding_mask=src_key_padding_mask)
 
-        # Classify from last timestep
-        return self.classifier(out[:, -1, :])
+        # Classify from last real (non-padded) timestep
+        if src_key_padding_mask is not None:
+            seq_lens = (~src_key_padding_mask).sum(dim=1) - 1  # (B,) last valid index
+            last_real = out[torch.arange(out.size(0), device=out.device), seq_lens, :]
+        else:
+            last_real = out[:, -1, :]
+        return self.classifier(last_real)

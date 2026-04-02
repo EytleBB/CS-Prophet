@@ -76,11 +76,12 @@ def evaluate(
             x = x.to(device)
             y = y.to(device)
 
+            src_key_padding_mask = (x.abs().sum(dim=-1) == 0).to(device)
             with torch.autocast(
                 device_type=device.type,
                 enabled=use_amp and device.type == "cuda",
             ):
-                logits = model(x)
+                logits = model(x, src_key_padding_mask=src_key_padding_mask)
                 loss = criterion(logits, y)
 
             total_loss += loss.item() * len(y)
@@ -149,7 +150,12 @@ def train(config_path: str = "configs/train_config.yaml") -> None:
         if val_loss < best_val_loss:
             best_val_loss = val_loss
             torch.save(
-                {"epoch": epoch, "model_state": model.state_dict(), "val_loss": val_loss},
+                {
+                    "epoch": epoch,
+                    "model_state": model.state_dict(),
+                    "val_loss": val_loss,
+                    "model_config": OmegaConf.to_container(cfg.model, resolve=True),
+                },
                 save_dir / "best.pt",
             )
 
@@ -178,8 +184,9 @@ def _run_epoch(
         x = x.to(device)
         y = y.to(device)
 
+        src_key_padding_mask = (x.abs().sum(dim=-1) == 0).to(device)
         with torch.autocast(device_type=device.type, enabled=use_amp):
-            unscaled_loss = criterion(model(x), y)
+            unscaled_loss = criterion(model(x, src_key_padding_mask=src_key_padding_mask), y)
             loss = unscaled_loss / accum_steps
 
         scaler.scale(loss).backward()
