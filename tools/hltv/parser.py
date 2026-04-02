@@ -33,11 +33,14 @@ def parse_results_page(html: str) -> list[dict]:
         event_tag = con.select_one(".event-name")
         event = event_tag.get_text(strip=True) if event_tag else ""
 
-        unix_tag = con.find(attrs={"data-unix": True})
+        # HLTV stores the timestamp in data-zonedgrouping-entry-unix on the result-con
+        # div itself, or in data-unix on a child element (older layout).
+        unix_ms = con.get("data-zonedgrouping-entry-unix") or (
+            con.find(attrs={"data-unix": True}) or {}
+        ).get("data-unix")
         date_str = ""
-        if unix_tag:
-            unix_ms = int(unix_tag["data-unix"])
-            dt = datetime.fromtimestamp(unix_ms / 1000, tz=timezone.utc)
+        if unix_ms:
+            dt = datetime.fromtimestamp(int(unix_ms) / 1000, tz=timezone.utc)
             date_str = dt.strftime("%Y-%m-%d")
 
         matches.append({"match_id": match_id, "url": href, "event": event, "date": date_str})

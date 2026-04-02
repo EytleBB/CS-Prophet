@@ -4,12 +4,13 @@ import random
 import time
 from typing import Any
 
-import cloudscraper
+from curl_cffi import requests as cffi_requests
 
 
 class HLTVScraper:
     """
     Rate-limited HTTP client for HLTV pages.
+    Uses curl_cffi with Chrome impersonation to bypass Cloudflare.
 
     Usage:
         cfg = {"min_delay": 2, "max_delay": 5, "max_retries": 3}
@@ -24,9 +25,7 @@ class HLTVScraper:
         self._min_delay = rate_limit_cfg.get("min_delay", 2)
         self._max_delay = rate_limit_cfg.get("max_delay", 5)
         self._max_retries = rate_limit_cfg.get("max_retries", 3)
-        self._session = cloudscraper.create_scraper(
-            browser={"browser": "chrome", "platform": "windows", "mobile": False}
-        )
+        self._session = cffi_requests.Session(impersonate="chrome")
 
     def _sleep(self) -> None:
         time.sleep(random.uniform(self._min_delay, self._max_delay))

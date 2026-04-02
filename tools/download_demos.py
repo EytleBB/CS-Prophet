@@ -39,11 +39,9 @@ def load_config(path: str) -> dict:
 
 
 def build_results_url(event_type_param: str, start_date: str, end_date: str, offset: int) -> str:
-    return (
-        f"https://www.hltv.org/results"
-        f"?startDate={start_date}&endDate={end_date}"
-        f"&eventType={event_type_param}&offset={offset}"
-    )
+    # Note: startDate/endDate params trigger Cloudflare's stricter bot protection on HLTV.
+    # Omit them and rely on client-side date filtering in the fetch loop instead.
+    return f"https://www.hltv.org/results?eventType={event_type_param}&offset={offset}"
 
 
 def resolve_player_roles(
