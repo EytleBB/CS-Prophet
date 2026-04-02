@@ -1,0 +1,37 @@
+target_demos: 600
+cutoff_days: 365
+
+event_tiers:
+  - Major
+  - S-tier
+  - A-tier
+  - B-tier
+
+# HLTV eventType query param values for each tier
+event_type_params:
+  Major: MAJOR
+  S-tier: S_TIER
+  A-tier: A_TIER
+  B-tier: B_TIER
+
+maps:
+  - de_mirage
+  - de_inferno
+  - de_dust2
+  - de_nuke
+  - de_ancient
+  - de_overpass
+  - de_anubis
+
+rate_limit:
+  min_delay: 2
+  max_delay: 5
+  pause_every: 10
+  pause_duration: 30
+  max_retries: 3
+
+output:
+  demos_dir: data/raw/demos
+  manifest: data/raw/manifest.json
+  player_cache: data/raw/player_cache.json
+  failed_log: data/raw/failed.json
