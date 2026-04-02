@@ -10,9 +10,9 @@ FEATURE_DIM: int = 74
 #   [35:70] CT players 0–4: same layout × 5
 #   [70:74] map_zone one-hot: A=70, B=71, mid=72, other=73
 
-_ZONE_IDX: dict[str, int] = {"A": 0, "B": 1, "mid": 2, "other": 3}
-_PLAYER_FIELDS: tuple[str, ...] = ("x", "y", "z", "hp", "armor", "helmet", "alive")
-_NORMALISE: frozenset[str] = frozenset({"hp", "armor"})
+ZONE_IDX: dict[str, int] = {"A": 0, "B": 1, "mid": 2, "other": 3}
+PLAYER_FIELDS: tuple[str, ...] = ("x", "y", "z", "hp", "armor", "helmet", "alive")
+NORMALISE: frozenset[str] = frozenset({"hp", "armor"})
 
 
 def build_state_vector(row: pd.Series) -> np.ndarray:
@@ -32,14 +32,14 @@ def build_state_vector(row: pd.Series) -> np.ndarray:
 
     for side, base in (("t", 0), ("ct", 35)):
         for i in range(5):
-            for j, field in enumerate(_PLAYER_FIELDS):
+            for j, field in enumerate(PLAYER_FIELDS):
                 col = f"{side}{i}_{field}"
                 val = float(row[col]) if col in row.index else 0.0
-                if field in _NORMALISE:
+                if field in NORMALISE:
                     val /= 100.0
                 vec[base + i * 7 + j] = val
 
-    zone_idx = _ZONE_IDX.get(str(row["map_zone"]) if "map_zone" in row.index else "other", 3)
+    zone_idx = ZONE_IDX.get(str(row["map_zone"]) if "map_zone" in row.index else "other", 3)
     vec[70 + zone_idx] = 1.0
 
     return vec

@@ -9,7 +9,7 @@ import pandas as pd
 import torch
 from torch.utils.data import Dataset
 
-from src.features.state_vector import FEATURE_DIM, _ZONE_IDX, _NORMALISE, _PLAYER_FIELDS
+from src.features.state_vector import FEATURE_DIM, ZONE_IDX, NORMALISE, PLAYER_FIELDS
 
 LABEL_MAP: dict[str, int] = {"A": 0, "B": 1, "other": 2}
 
@@ -34,6 +34,10 @@ def split_files(
     Returns:
         (train_files, val_files, test_files) — non-overlapping lists.
     """
+    if len(parquet_files) < 3:
+        raise ValueError(
+            f"split_files requires at least 3 files; got {len(parquet_files)}"
+        )
     rng = np.random.default_rng(seed)
     files = list(parquet_files)
     rng.shuffle(files)
@@ -56,19 +60,19 @@ class RoundSequenceDataset(Dataset):
 
     def __init__(self, parquet_files: list[Path], sequence_length: int = 240) -> None:
         self._sequences: list[torch.Tensor] = []
-        self._labels: list[int] = []
+        self._labels: list[torch.Tensor] = []
 
         for path in parquet_files:
             df = pd.read_parquet(path)
             for (_, _), group in df.groupby(["demo_name", "round_num"], sort=False):
                 label = LABEL_MAP.get(str(group["bomb_site"].iloc[0]), 2)
                 self._sequences.append(_build_padded_tensor(group, sequence_length))
-                self._labels.append(label)
+                self._labels.append(torch.tensor(label, dtype=torch.long))
 
     def __len__(self) -> int:
         return len(self._sequences)
 
-    def __getitem__(self, idx: int) -> tuple[torch.Tensor, int]:
+    def __getitem__(self, idx: int) -> tuple[torch.Tensor, torch.Tensor]:
         return self._sequences[idx], self._labels[idx]
 
 
@@ -80,17 +84,17 @@ def _build_padded_tensor(group: pd.DataFrame, sequence_length: int) -> torch.Ten
 
     for side, base in (("t", 0), ("ct", 35)):
         for i in range(5):
-            for j, field in enumerate(_PLAYER_FIELDS):
+            for j, field in enumerate(PLAYER_FIELDS):
                 col = f"{side}{i}_{field}"
                 if col in rows.columns:
                     vals = rows[col].values[:n].astype(np.float32)
-                    if field in _NORMALISE:
+                    if field in NORMALISE:
                         vals = vals / 100.0
                     mat[:n, base + i * 7 + j] = vals
 
     if "map_zone" in rows.columns:
         zones = rows["map_zone"].values[:n]
-        zone_indices = np.array([_ZONE_IDX.get(str(z), 3) for z in zones])
+        zone_indices = np.array([ZONE_IDX.get(str(z), 3) for z in zones])
         mat[np.arange(n), 70 + zone_indices] = 1.0
 
     return torch.from_numpy(mat)

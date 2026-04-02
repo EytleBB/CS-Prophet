@@ -75,6 +75,10 @@ class TestSplitFiles:
         assert abs(len(val) - 10) <= 1
         assert abs(len(test) - 10) <= 1
 
+    def test_too_few_files_raises(self):
+        with pytest.raises(ValueError, match="at least 3"):
+            split_files([Path("a.parquet"), Path("b.parquet")])
+
 
 class TestRoundSequenceDataset:
     def test_len_equals_round_count(self, tmp_path):
@@ -88,6 +92,8 @@ class TestRoundSequenceDataset:
         seq, label = ds[0]
         assert seq.shape == (240, FEATURE_DIM)
         assert seq.dtype == torch.float32
+        assert isinstance(label, torch.Tensor)
+        assert label.dtype == torch.long
 
     def test_short_sequence_padded_with_zeros(self, tmp_path):
         n_steps = 50
