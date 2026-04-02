@@ -1,5 +1,5 @@
 model:
-  input_dim: 84        # 10 players × 7 features (x,y,z,hp,armor,helmet,alive) = 70 + map_zone_onehot(4) + padding
+  input_dim: 74        # 10 players × 7 features (x,y,z,hp,armor,helmet,alive) = 70 + map_zone_onehot(4)
   d_model: 256
   nhead: 8
   num_layers: 4
