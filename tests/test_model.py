@@ -37,10 +37,10 @@ class TestBombSiteTransformer:
         assert out.shape == (1, 3)
 
     def test_num_classes_respected(self):
-        model = self._model(num_classes=3)
+        model = self._model(num_classes=5)
         x = torch.randn(2, 20, 74)
         out = model(x)
-        assert out.shape[-1] == 3
+        assert out.shape[-1] == 5
 
     def test_gradients_flow(self):
         model = self._model()
@@ -58,3 +58,10 @@ class TestBombSiteTransformer:
         out1 = model(x)
         out2 = model(x)
         assert torch.allclose(out1, out2)
+
+    def test_padding_mask_accepted(self):
+        model = self._model()
+        x = torch.randn(2, 30, 74)
+        mask = torch.zeros(2, 30, dtype=torch.bool)  # all False = no masking
+        out = model(x, src_key_padding_mask=mask)
+        assert out.shape == (2, 3)

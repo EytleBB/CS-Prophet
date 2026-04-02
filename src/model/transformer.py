@@ -41,9 +41,14 @@ class BombSiteTransformer(nn.Module):
         num_classes: int = 3,
     ) -> None:
         super().__init__()
+        if input_dim != 74:
+            raise ValueError(
+                f"BombSiteTransformer requires input_dim=74 (35 T + 35 CT + 4 zone); got {input_dim}"
+            )
         self.t_proj = nn.Linear(_T_IN, d_model)
         self.ct_proj = nn.Linear(_CT_IN, d_model)
-        self.pos_enc = PositionalEncoding(d_model, dropout)
+        self.t_pos_enc = PositionalEncoding(d_model, dropout)
+        self.ct_pos_enc = PositionalEncoding(d_model, dropout)
         self.cross_attn = CrossAttentionLayer(d_model, nhead, dropout)
         encoder_layer = nn.TransformerEncoderLayer(
             d_model=d_model, nhead=nhead, dropout=dropout, batch_first=True
@@ -51,11 +56,18 @@ class BombSiteTransformer(nn.Module):
         self.encoder = nn.TransformerEncoder(encoder_layer, num_layers=num_layers)
         self.classifier = nn.Linear(d_model, num_classes)
 
-    def forward(self, x: torch.Tensor) -> torch.Tensor:
+    def forward(
+        self,
+        x: torch.Tensor,
+        src_key_padding_mask: torch.Tensor | None = None,
+    ) -> torch.Tensor:
         """Predict bomb plant site from a batch of round sequences.
 
         Args:
             x: float32 of shape (batch, seq_len, 74).
+            src_key_padding_mask: optional bool tensor of shape (batch, seq_len),
+                True at positions that should be ignored (padding). Forwarded to
+                cross-attention and the self-attention encoder.
 
         Returns:
             (batch, num_classes) logits — pass through softmax for probabilities.
@@ -65,14 +77,14 @@ class BombSiteTransformer(nn.Module):
         ct_feats = x[_CT_SLICE]                                       # (B, T, 35)
 
         # Project + positional encoding
-        t_emb = self.pos_enc(self.t_proj(t_feats))
-        ct_emb = self.pos_enc(self.ct_proj(ct_feats))
+        t_emb = self.t_pos_enc(self.t_proj(t_feats))
+        ct_emb = self.ct_pos_enc(self.ct_proj(ct_feats))
 
         # Cross-attention: T side enriched with CT context
-        t_emb = self.cross_attn(t_emb, ct_emb)
+        t_emb = self.cross_attn(t_emb, ct_emb, key_padding_mask=src_key_padding_mask)
 
         # Self-attention encoder
-        out = self.encoder(t_emb)
+        out = self.encoder(t_emb, src_key_padding_mask=src_key_padding_mask)
 
         # Classify from last timestep
         return self.classifier(out[:, -1, :])
