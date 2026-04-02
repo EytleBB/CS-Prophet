@@ -74,8 +74,6 @@ def evaluate(
     with torch.no_grad():
         for x, y in loader:
             x = x.to(device)
-            if not isinstance(y, torch.Tensor):
-                y = torch.tensor(y, dtype=torch.long)
             y = y.to(device)
 
             with torch.autocast(
@@ -111,7 +109,7 @@ def train(config_path: str = "configs/train_config.yaml") -> None:
     train_files, val_files, _ = split_files(
         parquet_files,
         val_frac=cfg.training.val_split,
-        test_frac=cfg.training.val_split,
+        test_frac=cfg.training.test_split,
         seed=cfg.training.seed,
     )
 
@@ -136,7 +134,7 @@ def train(config_path: str = "configs/train_config.yaml") -> None:
     )
     criterion = FocalLoss(gamma=cfg.training.focal_loss_gamma)
     use_amp = cfg.training.use_amp and device.type == "cuda"
-    scaler = torch.cuda.amp.GradScaler(enabled=use_amp)
+    scaler = torch.amp.GradScaler("cuda", enabled=use_amp)
     accum_steps: int = cfg.training.gradient_accumulation_steps
 
     save_dir = Path(cfg.logging.save_dir)
@@ -167,7 +165,7 @@ def _run_epoch(
     loader: DataLoader,
     optimizer: torch.optim.Optimizer,
     criterion: nn.Module,
-    scaler: torch.cuda.amp.GradScaler,
+    scaler: torch.amp.GradScaler,
     device: torch.device,
     use_amp: bool,
     accum_steps: int,
@@ -178,12 +176,11 @@ def _run_epoch(
 
     for step_idx, (x, y) in enumerate(loader):
         x = x.to(device)
-        if not isinstance(y, torch.Tensor):
-            y = torch.tensor(y, dtype=torch.long)
         y = y.to(device)
 
         with torch.autocast(device_type=device.type, enabled=use_amp):
-            loss = criterion(model(x), y) / accum_steps
+            unscaled_loss = criterion(model(x), y)
+            loss = unscaled_loss / accum_steps
 
         scaler.scale(loss).backward()
 
@@ -192,6 +189,6 @@ def _run_epoch(
             scaler.update()
             optimizer.zero_grad()
 
-        total_loss += loss.item() * accum_steps * len(y)
+        total_loss += unscaled_loss.item() * len(y)
 
     return total_loss / max(len(loader.dataset), 1)
