@@ -1,48 +1,55 @@
 from __future__ import annotations
 
+import glob
 import os
-import zipfile
+import subprocess
+
+
+_BZ_CANDIDATES = [
+    r"D:\EDGE\APP\Bandizip\bz.exe",
+    r"C:\Program Files\Bandizip\bz.exe",
+    r"C:\Program Files (x86)\Bandizip\bz.exe",
+]
+
+
+def _find_bz() -> str:
+    bz = next((p for p in _BZ_CANDIDATES if os.path.isfile(p)), None)
+    if bz is None:
+        raise RuntimeError("Cannot find Bandizip bz.exe")
+    return bz
 
 
 def extract_archive(archive_path: str, dest_dir: str) -> list[str]:
     """
-    Extract .dem files from a .zip or .rar archive into dest_dir.
+    Extract .dem files from any archive (zip/rar/7z) into dest_dir using Bandizip.
     Returns list of absolute paths to extracted .dem files.
     """
     archive_path = os.path.abspath(archive_path)
     dest_dir = os.path.abspath(dest_dir)
     os.makedirs(dest_dir, exist_ok=True)
 
-    if archive_path.endswith(".zip"):
-        return _extract_zip(archive_path, dest_dir)
-    elif archive_path.endswith(".rar"):
-        return _extract_rar(archive_path, dest_dir)
-    else:
-        raise ValueError(f"Unsupported archive format: {archive_path}")
+    bz = _find_bz()
+    result = subprocess.run(
+        [bz, "x", f"-o:{dest_dir}", "-y", archive_path],
+        capture_output=True,
+        text=True,
+    )
+    if result.returncode != 0 and result.returncode != 2:
+        raise RuntimeError(
+            f"Bandizip failed (rc={result.returncode}): "
+            f"stderr={result.stderr.strip()!r} stdout={result.stdout.strip()!r}"
+        )
 
+    if result.returncode == 2:
+        # CRC error on one or more files — partial extraction.
+        # Keep files that are large enough to be valid demos (>= 1 MB).
+        print(f"    [warn] CRC error during extraction, using partial results")
 
-def _extract_zip(archive_path: str, dest_dir: str) -> list[str]:
-    extracted = []
-    with zipfile.ZipFile(archive_path, "r") as zf:
-        for name in zf.namelist():
-            if name.endswith(".dem"):
-                zf.extract(name, dest_dir)
-                extracted.append(os.path.join(dest_dir, name))
-    return extracted
-
-
-def _extract_rar(archive_path: str, dest_dir: str) -> list[str]:
-    try:
-        import rarfile
-    except ImportError:
-        raise RuntimeError("rarfile not installed. Run: pip install rarfile")
-    extracted = []
-    with rarfile.RarFile(archive_path) as rf:
-        for name in rf.namelist():
-            if name.endswith(".dem"):
-                rf.extract(name, dest_dir)
-                extracted.append(os.path.join(dest_dir, name))
-    return extracted
+    return [
+        os.path.abspath(p)
+        for p in glob.glob(os.path.join(dest_dir, "**", "*.dem"), recursive=True)
+        if os.path.getsize(p) >= 1024 * 1024
+    ]
 
 
 def get_dem_files(directory: str) -> list[str]:

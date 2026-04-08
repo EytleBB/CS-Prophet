@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import os
 import random
 import time
 from typing import Any
@@ -25,7 +26,7 @@ class HLTVScraper:
         self._min_delay = rate_limit_cfg.get("min_delay", 2)
         self._max_delay = rate_limit_cfg.get("max_delay", 5)
         self._max_retries = rate_limit_cfg.get("max_retries", 3)
-        self._session = cffi_requests.Session(impersonate="chrome")
+        self._session = cffi_requests.Session(impersonate="chrome120")
 
     def _sleep(self) -> None:
         time.sleep(random.uniform(self._min_delay, self._max_delay))
@@ -40,7 +41,8 @@ class HLTVScraper:
             url = self.BASE + url
         for attempt in range(self._max_retries):
             self._sleep()
-            resp = self._session.get(url, timeout=30)
+            headers = {"Referer": self.BASE + "/results"}
+            resp = self._session.get(url, headers=headers, timeout=30)
             if resp.status_code == 200:
                 return resp.text
             if resp.status_code in (429, 503):
@@ -51,24 +53,91 @@ class HLTVScraper:
             resp.raise_for_status()
         raise RuntimeError(f"Failed to fetch {url} after {self._max_retries} retries")
 
-    def download_file(self, url: str, dest_path: str) -> None:
+    def _resolve_cdn_url(self, url: str, referer: str | None = None) -> str:
         """
-        Stream-download a file (demo archive) to dest_path.
-        Retries on transient errors.
+        Follow HLTV's demo redirect chain and return the final R2 CDN URL.
+        Uses allow_redirects=False to only read Location headers, never the body.
+        """
+        hdrs = {
+            "Referer": referer or self.BASE,
+            "Accept": "text/html,application/xhtml+xml,*/*;q=0.9",
+        }
+        current_url = url
+        for _ in range(10):  # max redirect hops
+            self._sleep()
+            resp = self._session.get(
+                current_url, headers=hdrs, allow_redirects=False, timeout=15
+            )
+            if resp.status_code in (301, 302, 303, 307, 308):
+                location = resp.headers.get("Location", "")
+                if not location:
+                    raise RuntimeError("Redirect response missing Location header")
+                if not location.startswith("http"):
+                    location = self.BASE + location
+                if "r2-demos.hltv.org" in location:
+                    return location
+                current_url = location
+                continue
+            if resp.status_code in (429, 503):
+                time.sleep(2 ** 3)
+                continue
+            raise RuntimeError(
+                f"Unexpected status {resp.status_code} resolving CDN URL from {current_url}"
+            )
+        raise RuntimeError("Too many redirects resolving CDN URL")
+
+    def download_file(self, url: str, dest_path: str, referer: str | None = None) -> None:
+        """
+        Download a demo archive to dest_path.
+        Follows HLTV's redirect to R2 CDN in a single streaming request so that
+        Cloudflare session context carries through the redirect chain.
         """
         if not url.startswith("http"):
             url = self.BASE + url
+
         for attempt in range(self._max_retries):
             self._sleep()
-            resp = self._session.get(url, stream=True, timeout=60)
-            if resp.status_code == 200:
-                with open(dest_path, "wb") as f:
-                    for chunk in resp.iter_content(chunk_size=8192):
-                        f.write(chunk)
-                return
+            hdrs = {
+                "Referer": referer or self.BASE,
+                "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+            }
+            try:
+                resp = self._session.get(
+                    url, headers=hdrs, allow_redirects=True, stream=True, timeout=1800
+                )
+            except Exception as e:
+                print(f"    [retry] connection error (attempt {attempt+1}): {e}")
+                time.sleep(2 ** (attempt + 2))
+                continue
             if resp.status_code in (429, 503):
-                wait = 2 ** (attempt + 2)
-                time.sleep(wait)
+                time.sleep(2 ** (attempt + 2))
                 continue
             resp.raise_for_status()
-        raise RuntimeError(f"Failed to download {url} after {self._max_retries} retries")
+
+            content_type = resp.headers.get("Content-Type", "")
+            if "text/html" in content_type:
+                time.sleep(2 ** (attempt + 2))
+                continue
+
+            expected_size = int(resp.headers.get("Content-Length", 0))
+            print(f"    [cdn] {resp.url} ({expected_size // 1024 // 1024} MB)")
+            with open(dest_path, "wb") as f:
+                for chunk in resp.iter_content(chunk_size=65536):
+                    f.write(chunk)
+
+            actual_size = os.path.getsize(dest_path)
+            if expected_size > 0 and actual_size < expected_size:
+                os.remove(dest_path)
+                print(f"    [retry] incomplete: {actual_size}/{expected_size} bytes")
+                time.sleep(2 ** (attempt + 2))
+                continue
+
+            with open(dest_path, "rb") as f:
+                magic = f.read(4)
+            if not (magic[:2] == b"PK" or magic[:4] == b"Rar!"):
+                os.remove(dest_path)
+                time.sleep(2 ** (attempt + 2))
+                continue
+            return
+
+        raise RuntimeError(f"Failed to download demo after {self._max_retries} retries")

@@ -57,19 +57,37 @@ CS_Prophet/
 - Labels: **A / B / other** (3-class), derived from `bomb_planted` event `site` field
 - Players padded to 5T + 5CT; missing players zero-padded
 - Coordinates normalised to [0, 1] via per-map bounding boxes in `map_utils.py`
-- Feature vector: 74 dims — [0:35] T-players, [35:70] CT-players, [70:74] zone one-hot
+- Feature vector: 279 dims — [0:135] T-players, [135:270] CT-players, [270:274] zone one-hot, [274:279] global
 - Model reads from last **real** (non-padded) timestep using src_key_padding_mask
 - Checkpoint saves `model_config` so `RoundPredictor` can self-describe
 
-## Feature Vector Layout (74 dims)
+## Feature Vector Layout (279 dims)
 ```
-[0:35]   T players 0–4: (x, y, z, hp/100, armor/100, helmet, alive) × 5
-[35:70]  CT players 0–4: same layout × 5
-[70:74]  map_zone one-hot: A=70, B=71, mid=72, other=73
+Per-player stride = 27 dims:
+  [0:7]   x, y, z, hp/100, armor/100, helmet, alive
+  [7:12]  role one-hot (IGL, AWPer, Entry fragger, Support, Lurker)
+  [12:19] weapon_category one-hot (pistol, rifle, sniper, smg, heavy, grenade, other)
+  [19]    has_smoke
+  [20]    has_flash
+  [21]    has_he
+  [22]    has_molotov
+  [23]    flash_duration / 3.0
+  [24]    equip_value / 20000.0
+  [25]    is_scoped
+  [26]    is_defusing
+
+[0:135]    T players 0–4  × 27
+[135:270]  CT players 0–4 × 27
+[270:274]  map_zone one-hot: A=270, B=271, mid=272, other=273
+[274]      ct_score / 30
+[275]      t_score / 30
+[276]      round_num / 30
+[277]      ct_losing_streak / 5
+[278]      t_losing_streak / 5
 ```
 
 ## BombSiteTransformer Architecture
-1. Split 74-dim input → T-side (35 player + 4 zone = 39-dim) and CT-side (35-dim)
+1. Split 279-dim input → T-side (135 player + 4 zone + 5 global = 144-dim) and CT-side (135-dim)
 2. Project both to d_model with learned linear layers
 3. Add sinusoidal positional encoding independently to each stream
 4. Cross-attention: T queries CT to model adversarial interaction
@@ -87,9 +105,16 @@ Flat table — one row per (demo, round, step):
 | `tick` | int | original demo tick |
 | `bomb_site` | str | 'A', 'B', or 'other' |
 | `map_zone` | str | mean T position zone: 'A','B','mid','other' |
+| `ct_score`, `t_score` | int | score at round start |
+| `ct_losing_streak`, `t_losing_streak` | int | consecutive losses |
 | `t{i}_{x,y,z}` | float | normalised position, i=0..4 |
 | `t{i}_{hp,armor}` | int | health, armour |
 | `t{i}_{helmet,alive}` | bool | helmet / alive flags |
+| `t{i}_weapon` | str | weapon category string |
+| `t{i}_{has_smoke,has_flash,has_he,has_molotov}` | bool | grenade inventory |
+| `t{i}_flash_duration` | float | seconds still blinded |
+| `t{i}_equip_value` | int | equipment value this round |
+| `t{i}_{is_scoped,is_defusing}` | bool | action flags |
 | `ct{i}_{...}` | same | CT side, i=0..4 |
 
 ## Running Tests

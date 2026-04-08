@@ -4,8 +4,6 @@ import pytest
 from tools.hltv.manifest import (
     load_seen_match_ids,
     append_record,
-    load_player_cache,
-    save_player_cache,
     log_failure,
 )
 
@@ -13,11 +11,6 @@ from tools.hltv.manifest import (
 @pytest.fixture
 def tmp_manifest(tmp_path):
     return str(tmp_path / "manifest.json")
-
-
-@pytest.fixture
-def tmp_cache(tmp_path):
-    return str(tmp_path / "player_cache.json")
 
 
 @pytest.fixture
@@ -36,10 +29,8 @@ def test_append_record_and_reload(tmp_manifest):
         "map": "de_mirage",
         "date": "2026-01-01",
         "event": "Test Event",
-        "event_tier": "Major",
         "team_ct": "Team A",
         "team_t": "Team B",
-        "players": [],
     }
     append_record(tmp_manifest, record)
     seen = load_seen_match_ids(tmp_manifest)
@@ -50,18 +41,9 @@ def test_append_multiple_records(tmp_manifest):
     for i in range(3):
         append_record(tmp_manifest, {"match_id": str(i), "demo_file": f"{i}.dem",
                                      "map": "de_mirage", "date": "2026-01-01",
-                                     "event": "E", "event_tier": "Major",
-                                     "team_ct": "A", "team_t": "B", "players": []})
+                                     "event": "E", "team_ct": "A", "team_t": "B"})
     seen = load_seen_match_ids(tmp_manifest)
     assert seen == {"0", "1", "2"}
-
-
-def test_player_cache_roundtrip(tmp_cache):
-    assert load_player_cache(tmp_cache) == {}
-    cache = {"7998": "AWPer", "10394": "IGL"}
-    save_player_cache(tmp_cache, cache)
-    loaded = load_player_cache(tmp_cache)
-    assert loaded == cache
 
 
 def test_log_failure(tmp_failed):

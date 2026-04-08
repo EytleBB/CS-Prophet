@@ -4,12 +4,15 @@ import pytest
 from tools.hltv.downloader import extract_archive, get_dem_files
 
 
+_ONE_MB = b"X" * (1024 * 1024 + 1)
+
+
 @pytest.fixture
 def zip_with_two_dems(tmp_path):
     archive = tmp_path / "demo.zip"
     with zipfile.ZipFile(archive, "w") as zf:
-        zf.writestr("navi-vs-faze-m1-de_mirage.dem", b"FAKE_DEM_CONTENT" * 10)
-        zf.writestr("navi-vs-faze-m2-de_inferno.dem", b"FAKE_DEM_CONTENT" * 10)
+        zf.writestr("navi-vs-faze-m1-de_mirage.dem", _ONE_MB)
+        zf.writestr("navi-vs-faze-m2-de_inferno.dem", _ONE_MB)
     return str(archive)
 
 
@@ -17,7 +20,7 @@ def zip_with_two_dems(tmp_path):
 def zip_with_non_dem(tmp_path):
     archive = tmp_path / "demo.zip"
     with zipfile.ZipFile(archive, "w") as zf:
-        zf.writestr("match-de_dust2.dem", b"FAKE")
+        zf.writestr("match-de_dust2.dem", _ONE_MB)
         zf.writestr("README.txt", b"hello")
     return str(archive)
 

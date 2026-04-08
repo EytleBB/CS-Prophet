@@ -141,6 +141,8 @@ def train(config_path: str = "configs/train_config.yaml") -> None:
     save_dir = Path(cfg.logging.save_dir)
     save_dir.mkdir(parents=True, exist_ok=True)
     best_val_loss = float("inf")
+    patience: int = cfg.training.get("early_stop_patience", 0)
+    no_improve = 0
 
     for epoch in range(cfg.training.epochs):
         train_loss = _run_epoch(model, train_loader, optimizer, criterion,
@@ -149,6 +151,7 @@ def train(config_path: str = "configs/train_config.yaml") -> None:
 
         if val_loss < best_val_loss:
             best_val_loss = val_loss
+            no_improve = 0
             torch.save(
                 {
                     "epoch": epoch,
@@ -158,12 +161,19 @@ def train(config_path: str = "configs/train_config.yaml") -> None:
                 },
                 save_dir / "best.pt",
             )
+        else:
+            no_improve += 1
 
         if (epoch + 1) % cfg.logging.log_interval == 0:
             logger.info(
                 "Epoch %d | train=%.4f val=%.4f acc=%.3f",
                 epoch + 1, train_loss, val_loss, val_acc,
             )
+
+        if patience > 0 and no_improve >= patience:
+            logger.info("Early stopping at epoch %d (no val improvement for %d epochs)",
+                        epoch + 1, patience)
+            break
 
 
 def _run_epoch(
@@ -199,3 +209,12 @@ def _run_epoch(
         total_loss += unscaled_loss.item() * len(y)
 
     return total_loss / max(len(loader.dataset), 1)
+
+
+if __name__ == "__main__":
+    logging.basicConfig(
+        level=logging.INFO,
+        format="%(asctime)s  %(levelname)-7s  %(message)s",
+        datefmt="%H:%M:%S",
+    )
+    train()

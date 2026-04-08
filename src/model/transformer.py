@@ -7,23 +7,26 @@ import torch.nn as nn
 
 from src.model.attention import CrossAttentionLayer, PositionalEncoding
 
-# Indices into the 74-dim feature vector (see state_vector.py):
-#   [0:35]   T-player features (5 × 7)
-#   [35:70]  CT-player features (5 × 7)
-#   [70:74]  map_zone one-hot
-_T_SLICE = (slice(None), slice(None), slice(0, 35))       # T-player features
-_ZONE_SLICE = (slice(None), slice(None), slice(70, 74))   # zone one-hot
-_CT_SLICE = (slice(None), slice(None), slice(35, 70))     # CT-player features
+# Indices into the 279-dim feature vector (see state_vector.py):
+#   [0:135]   T-player features (5 × 27)
+#   [135:270] CT-player features (5 × 27)
+#   [270:274] map_zone one-hot
+#   [274:279] global features (ct_score, t_score, round_num, ct_streak, t_streak)
+_T_SLICE    = (slice(None), slice(None), slice(0, 135))     # T-player features
+_CT_SLICE   = (slice(None), slice(None), slice(135, 270))   # CT-player features
+_ZONE_SLICE = (slice(None), slice(None), slice(270, 274))   # zone one-hot
+_GLOB_SLICE = (slice(None), slice(None), slice(274, 279))   # global features
 
-_T_IN = 39   # 35 T-player features + 4 zone features → projected to d_model
-_CT_IN = 35  # 35 CT-player features → projected to d_model
+_T_IN  = 135 + 4 + 5  # T-player (135) + zone (4) + global (5) → 144
+_CT_IN = 135           # CT-player (135)
 
 
 class BombSiteTransformer(nn.Module):
     """Sequence-to-label Transformer for bomb-site prediction.
 
     Architecture:
-        1. Split input into T-side (player + zone, 39-dim) and CT-side (35-dim)
+        1. Split 279-dim input into T-side (players + zone + global, 144-dim)
+           and CT-side (players, 135-dim)
         2. Project each to d_model with learned linear layers
         3. Add sinusoidal positional encoding to both
         4. Cross-attention: T queries CT to model adversarial interaction
@@ -33,7 +36,7 @@ class BombSiteTransformer(nn.Module):
 
     def __init__(
         self,
-        input_dim: int = 74,   # kept for config compatibility; actual split is fixed
+        input_dim: int = 279,
         d_model: int = 256,
         nhead: int = 8,
         num_layers: int = 4,
@@ -41,9 +44,10 @@ class BombSiteTransformer(nn.Module):
         num_classes: int = 3,
     ) -> None:
         super().__init__()
-        if input_dim != 74:
+        if input_dim != 279:
             raise ValueError(
-                f"BombSiteTransformer requires input_dim=74 (35 T + 35 CT + 4 zone); got {input_dim}"
+                f"BombSiteTransformer requires input_dim=279 "
+                f"(135 T + 135 CT + 4 zone + 5 global); got {input_dim}"
             )
         self.t_proj = nn.Linear(_T_IN, d_model)
         self.ct_proj = nn.Linear(_CT_IN, d_model)
@@ -64,7 +68,7 @@ class BombSiteTransformer(nn.Module):
         """Predict bomb plant site from a batch of round sequences.
 
         Args:
-            x: float32 of shape (batch, seq_len, 74).
+            x: float32 of shape (batch, seq_len, 279).
             src_key_padding_mask: optional bool tensor of shape (batch, seq_len),
                 True at positions that should be ignored (padding). Forwarded to
                 cross-attention and the self-attention encoder.
@@ -73,8 +77,8 @@ class BombSiteTransformer(nn.Module):
             (batch, num_classes) logits — pass through softmax for probabilities.
         """
         # Split feature vector
-        t_feats = torch.cat([x[_T_SLICE], x[_ZONE_SLICE]], dim=-1)  # (B, T, 39)
-        ct_feats = x[_CT_SLICE]                                       # (B, T, 35)
+        t_feats = torch.cat([x[_T_SLICE], x[_ZONE_SLICE], x[_GLOB_SLICE]], dim=-1)  # (B, T, 144)
+        ct_feats = x[_CT_SLICE]                                                       # (B, T, 135)
 
         # Project + positional encoding
         t_emb = self.t_pos_enc(self.t_proj(t_feats))

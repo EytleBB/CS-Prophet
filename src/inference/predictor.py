@@ -25,13 +25,16 @@ class RoundPredictor:
         """Return bomb plant site probabilities.
 
         Args:
-            features: float32 array of shape (seq_len, 74) — one round's state sequence.
+            features: float32 array of shape (seq_len, 279) — one round's state sequence.
 
         Returns:
             dict with keys 'A', 'B', 'other' — probabilities summing to 1.0.
         """
         x = torch.tensor(features, dtype=torch.float32).unsqueeze(0).to(self.device)
+        src_key_padding_mask = (x.abs().sum(dim=-1) == 0)
         with torch.no_grad():
-            logits = self.model(x)
+            logits = self.model(x, src_key_padding_mask=src_key_padding_mask)
             probs = torch.softmax(logits, dim=-1).squeeze().tolist()
-        return {"A": probs[0], "B": probs[1], "other": probs[2]}
+        p_a, p_b = probs[0], probs[1]
+        total = p_a + p_b or 1.0  # avoid div-by-zero
+        return {"A": p_a / total, "B": p_b / total}

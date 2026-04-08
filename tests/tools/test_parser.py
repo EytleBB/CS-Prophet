@@ -1,7 +1,6 @@
 from tools.hltv.parser import (
     parse_results_page,
     parse_match_page,
-    parse_player_page,
     get_map_from_dem_filename,
 )
 
@@ -83,35 +82,6 @@ MATCH_HTML = """
 </body></html>
 """
 
-PLAYER_HTML_WITH_ROLE = """
-<html><body>
-<div class="profile-team-nav">
-  <div class="playerRealname">Oleksandr Kostyliev</div>
-</div>
-<div class="playerpage-leftside">
-  <div class="infobox-columns">
-    <div class="infobox-columns-cell">
-      <div class="cell-title">Role</div>
-      <div class="cell-value">AWPer</div>
-    </div>
-  </div>
-</div>
-</body></html>
-"""
-
-PLAYER_HTML_NO_ROLE = """
-<html><body>
-<div class="playerpage-leftside">
-  <div class="infobox-columns">
-    <div class="infobox-columns-cell">
-      <div class="cell-title">Age</div>
-      <div class="cell-value">27</div>
-    </div>
-  </div>
-</div>
-</body></html>
-"""
-
 # ── Tests ─────────────────────────────────────────────────────────────────
 
 def test_parse_results_page_returns_matches():
@@ -144,26 +114,9 @@ def test_parse_match_page_teams():
     assert "FaZe Clan" in (result["team_ct"], result["team_t"])
 
 
-def test_parse_match_page_players():
-    result = parse_match_page(MATCH_HTML)
-    ids = [p["player_id"] for p in result["players"]]
-    assert "7998" in ids
-    assert "10394" in ids
-
-
 def test_parse_match_page_no_demo_returns_none():
     result = parse_match_page("<html><body><p>No demo here</p></body></html>")
     assert result is None
-
-
-def test_parse_player_page_with_role():
-    role = parse_player_page(PLAYER_HTML_WITH_ROLE)
-    assert role == "AWPer"
-
-
-def test_parse_player_page_no_role():
-    role = parse_player_page(PLAYER_HTML_NO_ROLE)
-    assert role is None
 
 
 def test_get_map_from_dem_filename_standard():

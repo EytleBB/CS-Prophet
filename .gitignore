@@ -1,0 +1,14 @@
+__pycache__/
+*.py[cod]
+*.pyo
+.pytest_cache/
+.coverage
+data/raw/demos/
+data/raw/manifest.json
+data/raw/player_cache.json
+data/raw/failed.json
+data/processed/
+data/splits/
+*.ckpt
+*.onnx
+tools/hltv_secrets.yaml

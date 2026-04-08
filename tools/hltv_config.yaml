@@ -1,18 +1,27 @@
-target_demos: 600
-cutoff_days: 365
+target_demos: 700
+# Safety backstop — don't fetch matches older than this many days
+cutoff_days: 400
 
-event_tiers:
-  - Major
-  - S-tier
-  - A-tier
-  - B-tier
-
-# HLTV eventType query param values for each tier
-event_type_params:
-  Major: MAJOR
-  S-tier: S_TIER
-  A-tier: A_TIER
-  B-tier: B_TIER
+# Leave empty to download from all events (no filter)
+allowed_events:
+  - "StarLadder Budapest Major 2025"
+  - "IEM Chengdu 2025"
+  - "PGL Masters Bucharest 2025"
+  - "Thunderpick World Championship 2025"
+  - "CS Asia Championships 2025"
+  - "ESL Pro League Season 22"
+  - "FISSURE Playground 2"
+  - "Esports World Cup 2025"
+  - "IEM Cologne 2025"
+  - "FISSURE Playground 1"
+  - "BLAST.tv Austin Major 2025"
+  - "IEM Dallas 2025"
+  - "PGL Astana 2025"
+  - "IEM Melbourne 2025"
+  - "PGL Bucharest 2025"
+  - "ESL Pro League Season 21"
+  - "PGL Cluj-Napoca 2025"
+  - "IEM Katowice 2025"
 
 maps:
   - de_mirage
@@ -31,7 +40,6 @@ rate_limit:
   max_retries: 3
 
 output:
-  demos_dir: data/raw/demos
-  manifest: data/raw/manifest.json
-  player_cache: data/raw/player_cache.json
-  failed_log: data/raw/failed.json
+  demos_dir: ../data/raw/demos
+  manifest: ../data/raw/manifest.json
+  failed_log: ../data/raw/failed.json

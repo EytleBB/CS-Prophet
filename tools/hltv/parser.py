@@ -50,7 +50,7 @@ def parse_results_page(html: str) -> list[dict]:
 def parse_match_page(html: str) -> dict | None:
     """
     Parse HLTV match page HTML.
-    Returns {"demo_url", "team_ct", "team_t", "players"} or None if no demo link.
+    Returns {"demo_url", "team_ct", "team_t"} or None if no demo link.
     First lineup box = CT side.
     """
     soup = BeautifulSoup(html, "lxml")
@@ -62,43 +62,16 @@ def parse_match_page(html: str) -> dict | None:
 
     lineups = soup.select("div.lineup")
     team_ct, team_t = "", ""
-    players = []
 
     for i, lineup in enumerate(lineups[:2]):
         team_name_tag = lineup.select_one(".teamName, .team-name")
         team_name = team_name_tag.get_text(strip=True) if team_name_tag else ""
-        side = "CT" if i == 0 else "T"
         if i == 0:
             team_ct = team_name
         else:
             team_t = team_name
 
-        for player_link in lineup.select("a[href*='/player/']"):
-            href = player_link["href"]
-            parts = href.strip("/").split("/")
-            if len(parts) >= 2:
-                players.append({
-                    "player_id": parts[1],
-                    "name": player_link.get_text(strip=True),
-                    "team": team_name,
-                    "side": side,
-                })
-
-    return {"demo_url": demo_url, "team_ct": team_ct, "team_t": team_t, "players": players}
-
-
-def parse_player_page(html: str) -> str | None:
-    """
-    Parse HLTV player profile page HTML.
-    Returns role string (e.g. "AWPer", "IGL") or None.
-    """
-    soup = BeautifulSoup(html, "lxml")
-    for cell in soup.select("div.infobox-columns-cell, div.playerInfoRow"):
-        title = cell.select_one(".cell-title, .playerInfoTitle")
-        value = cell.select_one(".cell-value, .playerInfoValue")
-        if title and value and "role" in title.get_text(strip=True).lower():
-            return value.get_text(strip=True)
-    return None
+    return {"demo_url": demo_url, "team_ct": team_ct, "team_t": team_t}
 
 
 def get_map_from_dem_filename(filename: str) -> str | None:

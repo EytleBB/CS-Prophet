@@ -83,14 +83,14 @@ class TestSplitFiles:
 class TestRoundSequenceDataset:
     def test_len_equals_round_count(self, tmp_path):
         path = _make_parquet(tmp_path, n_rounds=3, n_steps=10)
-        ds = RoundSequenceDataset([path], sequence_length=240)
+        ds = RoundSequenceDataset([path], sequence_length=720)
         assert len(ds) == 3
 
     def test_sequence_shape(self, tmp_path):
         path = _make_parquet(tmp_path, n_rounds=1, n_steps=120)
-        ds = RoundSequenceDataset([path], sequence_length=240)
+        ds = RoundSequenceDataset([path], sequence_length=720)
         seq, label = ds[0]
-        assert seq.shape == (240, FEATURE_DIM)
+        assert seq.shape == (720, FEATURE_DIM)
         assert seq.dtype == torch.float32
         assert isinstance(label, torch.Tensor)
         assert label.dtype == torch.long
@@ -98,44 +98,43 @@ class TestRoundSequenceDataset:
     def test_short_sequence_padded_with_zeros(self, tmp_path):
         n_steps = 50
         path = _make_parquet(tmp_path, n_rounds=1, n_steps=n_steps)
-        ds = RoundSequenceDataset([path], sequence_length=240)
+        ds = RoundSequenceDataset([path], sequence_length=720)
         seq, _ = ds[0]
         assert seq[n_steps - 1].abs().sum().item() > 0
         assert seq[n_steps:].abs().sum().item() == 0.0
 
     def test_long_sequence_truncated(self, tmp_path):
         path = _make_parquet(tmp_path, n_rounds=1, n_steps=300)
-        ds = RoundSequenceDataset([path], sequence_length=240)
+        ds = RoundSequenceDataset([path], sequence_length=720)
         seq, _ = ds[0]
-        assert seq.shape[0] == 240
+        assert seq.shape[0] == 720
 
     def test_label_A_is_0(self, tmp_path):
         path = _make_parquet(tmp_path, n_rounds=1, bomb_site="A")
-        ds = RoundSequenceDataset([path], sequence_length=240)
+        ds = RoundSequenceDataset([path], sequence_length=720)
         _, label = ds[0]
         assert label == LABEL_MAP["A"]
 
     def test_label_B_is_1(self, tmp_path):
         path = _make_parquet(tmp_path, n_rounds=1, bomb_site="B")
-        ds = RoundSequenceDataset([path], sequence_length=240)
+        ds = RoundSequenceDataset([path], sequence_length=720)
         _, label = ds[0]
         assert label == LABEL_MAP["B"]
 
-    def test_label_other_is_2(self, tmp_path):
+    def test_other_rounds_skipped(self, tmp_path):
         path = _make_parquet(tmp_path, n_rounds=1, bomb_site="other")
-        ds = RoundSequenceDataset([path], sequence_length=240)
-        _, label = ds[0]
-        assert label == LABEL_MAP["other"]
+        ds = RoundSequenceDataset([path], sequence_length=720)
+        assert len(ds) == 0
 
     def test_multiple_files_concatenated(self, tmp_path):
         p1 = _make_parquet(tmp_path, "demo1.parquet", n_rounds=2)
         p2 = _make_parquet(tmp_path, "demo2.parquet", n_rounds=3)
-        ds = RoundSequenceDataset([p1, p2], sequence_length=240)
+        ds = RoundSequenceDataset([p1, p2], sequence_length=720)
         assert len(ds) == 5
 
     def test_values_in_unit_range(self, tmp_path):
         path = _make_parquet(tmp_path, n_rounds=1, n_steps=10)
-        ds = RoundSequenceDataset([path], sequence_length=240)
+        ds = RoundSequenceDataset([path], sequence_length=720)
         seq, _ = ds[0]
         assert seq.min().item() >= 0.0
         assert seq.max().item() <= 1.0

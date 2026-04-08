@@ -11,12 +11,12 @@ from src.model.transformer import BombSiteTransformer
 
 def _tiny_model() -> BombSiteTransformer:
     return BombSiteTransformer(
-        input_dim=74, d_model=32, nhead=4, num_layers=1, dropout=0.0, num_classes=3
+        input_dim=279, d_model=32, nhead=4, num_layers=1, dropout=0.0, num_classes=3
     )
 
 
 def _tiny_loader(n: int = 8, seq_len: int = 10) -> DataLoader:
-    x = torch.randn(n, seq_len, 74)
+    x = torch.randn(n, seq_len, 279)
     y = torch.randint(0, 3, (n,))
     return DataLoader(TensorDataset(x, y), batch_size=4)
 
@@ -99,7 +99,7 @@ class TestEvaluate:
                 # Always predict class 0 for a batch of all-0 labels
                 return torch.tensor([[10.0, 0.0, 0.0]]).expand(x.size(0), -1)
 
-        x = torch.randn(8, 10, 74)
+        x = torch.randn(8, 10, 279)
         y = torch.zeros(8, dtype=torch.long)
         loader = DataLoader(TensorDataset(x, y), batch_size=4)
         criterion = FocalLoss(gamma=2.0)

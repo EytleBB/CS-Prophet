@@ -11,7 +11,7 @@ import pytest
 from src.parser.demo_parser import (
     DOWNSAMPLE,
     MAX_STEPS,
-    PRE_PLANT_SECS,
+    POST_START_SECS,
     TARGET_RATE,
     TICK_RATE,
     _build_state_row,
@@ -46,13 +46,32 @@ def _make_multi_tick_df(ticks: list[int]) -> pd.DataFrame:
     return pd.concat([_make_tick_df(t) for t in ticks], ignore_index=True)
 
 
-def _make_mock_parser(plant_tick: int = 5120, site: int = 0) -> MagicMock:
+def _expected_ticks(round_start_tick: int, plant_tick: int) -> list[int]:
+    """Compute expected tick list for the post-start window."""
+    end_tick = min(round_start_tick + POST_START_SECS * TICK_RATE, plant_tick)
+    return list(range(round_start_tick, end_tick + 1, DOWNSAMPLE))
+
+
+def _make_mock_parser(
+    plant_tick: int = 5120,
+    round_start_tick: int = 3200,
+    site: int = 0,
+) -> MagicMock:
     """DemoParser mock for a single-round demo with one bomb plant."""
-    start = max(0, plant_tick - PRE_PLANT_SECS * TICK_RATE)
-    ticks = list(range(start, plant_tick + 1, DOWNSAMPLE))
+    ticks = _expected_ticks(round_start_tick, plant_tick)
 
     mock = MagicMock()
-    mock.parse_event.return_value = pd.DataFrame({"site": [site], "tick": [plant_tick]})
+
+    def _parse_event(event_name, **kwargs):
+        if event_name == "bomb_planted":
+            return pd.DataFrame({"site": [site], "tick": [plant_tick]})
+        if event_name == "round_end":
+            return pd.DataFrame({"winner": pd.Series([], dtype=str), "tick": pd.Series([], dtype=int)})
+        if event_name == "round_freeze_end":
+            return pd.DataFrame({"tick": [round_start_tick]})
+        return pd.DataFrame()
+
+    mock.parse_event.side_effect = _parse_event
     mock.parse_ticks.return_value = _make_multi_tick_df(ticks)
     mock.parse_header.return_value = {"map_name": "de_mirage"}
     return mock
@@ -64,8 +83,8 @@ def test_constants_match_spec():
     assert TICK_RATE == 64
     assert TARGET_RATE == 8
     assert DOWNSAMPLE == 8          # 64 // 8
-    assert PRE_PLANT_SECS == 30
-    assert MAX_STEPS == 240         # 30 * 8
+    assert POST_START_SECS == 90
+    assert MAX_STEPS == 720         # 90 * 8
 
 
 # ── _build_state_row ──────────────────────────────────────────────────────
@@ -81,7 +100,7 @@ class TestBuildStateRow:
         row = self._row()
         for side in ("t", "ct"):
             for i in range(5):
-                for suffix in ("_x", "_y", "_z", "_hp", "_armor", "_helmet", "_alive"):
+                for suffix in ("_x", "_y", "_z", "_hp", "_armor", "_helmet", "_alive", "_role"):
                     assert f"{side}{i}{suffix}" in row
 
     def test_bomb_site_stored(self):
@@ -111,6 +130,26 @@ class TestBuildStateRow:
         assert row["t3_hp"] == 0
         assert row["t4_x"] == 0.0
         assert row["t4_alive"] is False
+        assert row["t4_role"] == ""
+
+    def test_role_written_when_player_roles_provided(self):
+        tick_df = _make_tick_df(100)
+        roles = {"t_p0": "AWPer", "ct_p1": "IGL"}
+        row = _build_state_row(tick_df, step=0, tick=100,
+                               round_num=1, bomb_site="A", map_name="de_mirage",
+                               player_roles=roles)
+        assert row["t0_role"] == "AWPer"
+        assert row["ct1_role"] == "IGL"
+        assert row["t1_role"] == ""   # not in roles dict
+
+    def test_role_empty_when_no_player_roles(self):
+        row = _build_state_row(
+            _make_tick_df(100), step=0, tick=100,
+            round_num=1, bomb_site="A", map_name="de_mirage",
+        )
+        for side in ("t", "ct"):
+            for i in range(5):
+                assert row[f"{side}{i}_role"] == ""
 
     def test_map_zone_key_present(self):
         assert "map_zone" in self._row()
@@ -119,65 +158,71 @@ class TestBuildStateRow:
 # ── _extract_sequence ─────────────────────────────────────────────────────
 
 class TestExtractSequence:
-    def _mock_parser(self, plant_tick: int = 1280) -> MagicMock:
-        start = max(0, plant_tick - PRE_PLANT_SECS * TICK_RATE)
-        ticks = list(range(start, plant_tick + 1, DOWNSAMPLE))
+    def _mock_parser(self, round_start_tick: int = 0, plant_tick: int = 5120) -> MagicMock:
+        ticks = _expected_ticks(round_start_tick, plant_tick)
         mock = MagicMock()
         mock.parse_ticks.return_value = _make_multi_tick_df(ticks)
         return mock
 
     def test_returns_dataframe(self):
         mock = self._mock_parser()
-        result = _extract_sequence(mock, round_num=1, plant_tick=1280,
+        result = _extract_sequence(mock, round_num=1, round_start_tick=0,
+                                   plant_tick=5120,
                                    bomb_site="A", map_name="de_mirage")
         assert isinstance(result, pd.DataFrame)
 
     def test_step_count_at_most_max_steps_plus_one(self):
-        mock = self._mock_parser(plant_tick=5120)
-        result = _extract_sequence(mock, round_num=1, plant_tick=5120,
+        mock = self._mock_parser()
+        result = _extract_sequence(mock, round_num=1, round_start_tick=0,
+                                   plant_tick=5120,
                                    bomb_site="A", map_name="de_mirage")
         assert len(result) <= MAX_STEPS + 1
 
     def test_steps_are_sequential_from_zero(self):
         mock = self._mock_parser()
-        result = _extract_sequence(mock, round_num=1, plant_tick=1280,
+        result = _extract_sequence(mock, round_num=1, round_start_tick=0,
+                                   plant_tick=5120,
                                    bomb_site="A", map_name="de_mirage")
         steps = result["step"].tolist()
         assert steps == list(range(len(steps)))
 
     def test_bomb_site_column_is_consistent(self):
         mock = self._mock_parser()
-        result = _extract_sequence(mock, round_num=1, plant_tick=1280,
+        result = _extract_sequence(mock, round_num=1, round_start_tick=0,
+                                   plant_tick=5120,
                                    bomb_site="B", map_name="de_mirage")
         assert (result["bomb_site"] == "B").all()
 
     def test_returns_none_on_empty_tick_df(self):
         mock = MagicMock()
         mock.parse_ticks.return_value = pd.DataFrame()
-        result = _extract_sequence(mock, round_num=1, plant_tick=1280,
+        result = _extract_sequence(mock, round_num=1, round_start_tick=0,
+                                   plant_tick=1280,
                                    bomb_site="A", map_name="de_mirage")
         assert result is None
 
     def test_parse_ticks_called_with_correct_ticks(self):
-        plant_tick = 640
-        start = max(0, plant_tick - PRE_PLANT_SECS * TICK_RATE)
-        expected = list(range(start, plant_tick + 1, DOWNSAMPLE))
+        round_start_tick = 0
+        plant_tick = 5120
+        expected = _expected_ticks(round_start_tick, plant_tick)
 
-        mock = self._mock_parser(plant_tick)
-        _extract_sequence(mock, round_num=1, plant_tick=plant_tick,
+        mock = self._mock_parser(round_start_tick, plant_tick)
+        _extract_sequence(mock, round_num=1, round_start_tick=round_start_tick,
+                          plant_tick=plant_tick,
                           bomb_site="A", map_name="de_mirage")
 
-        called_ticks = mock.parse_ticks.call_args[0][1]
+        called_ticks = mock.parse_ticks.call_args.kwargs["ticks"]
         assert called_ticks == expected
 
-    def test_partial_round_when_near_start(self):
-        # plant at tick 200 → only a few ticks available
-        plant_tick = 200
-        start = max(0, plant_tick - PRE_PLANT_SECS * TICK_RATE)
-        ticks = list(range(start, plant_tick + 1, DOWNSAMPLE))
+    def test_truncated_when_plant_before_30s(self):
+        # Plant at round_start + 10s → only ~80 steps, not 240
+        rs = 1000
+        plant = rs + 10 * TICK_RATE  # 10 seconds after start
+        ticks = _expected_ticks(rs, plant)
         mock = MagicMock()
         mock.parse_ticks.return_value = _make_multi_tick_df(ticks)
-        result = _extract_sequence(mock, round_num=1, plant_tick=plant_tick,
+        result = _extract_sequence(mock, round_num=1, round_start_tick=rs,
+                                   plant_tick=plant,
                                    bomb_site="A", map_name="de_mirage")
         assert result is not None
         assert len(result) < MAX_STEPS
@@ -222,11 +267,19 @@ class TestParseDemoIntegration:
         assert (df["bomb_site"] == "A").all()
 
     def test_site_1_produces_B_labels(self, tmp_path: Path):
+        rs = 3200
         plant_tick = 5120
-        start = max(0, plant_tick - PRE_PLANT_SECS * TICK_RATE)
-        ticks = list(range(start, plant_tick + 1, DOWNSAMPLE))
+        ticks = _expected_ticks(rs, plant_tick)
         mock = MagicMock()
-        mock.parse_event.return_value = pd.DataFrame({"site": [1], "tick": [plant_tick]})
+
+        def _parse_event(e, **kw):
+            if e == "bomb_planted":
+                return pd.DataFrame({"site": [1], "tick": [plant_tick]})
+            if e == "round_freeze_end":
+                return pd.DataFrame({"tick": [rs]})
+            return pd.DataFrame({"winner": pd.Series([], dtype=str), "tick": pd.Series([], dtype=int)})
+
+        mock.parse_event.side_effect = _parse_event
         mock.parse_ticks.return_value = _make_multi_tick_df(ticks)
         mock.parse_header.return_value = {"map_name": "de_inferno"}
         dem = tmp_path / "b_site.dem"
@@ -240,7 +293,7 @@ class TestParseDemoIntegration:
 
     def test_returns_none_when_no_plant_events(self, tmp_path: Path):
         mock = MagicMock()
-        mock.parse_event.return_value = pd.DataFrame()
+        mock.parse_event.return_value = pd.DataFrame()  # empty for any event
         mock.parse_header.return_value = {"map_name": "de_mirage"}
         dem = tmp_path / "no_plants.dem"
         dem.touch()
@@ -277,19 +330,38 @@ class TestParseDemoIntegration:
             for i in range(5):
                 assert f"{side}{i}_x" in df.columns
                 assert f"{side}{i}_hp" in df.columns
+                assert f"{side}{i}_role" in df.columns
+
+    def test_player_roles_written_to_parquet(self, tmp_path: Path):
+        mock = _make_mock_parser()
+        dem = tmp_path / "match.dem"
+        dem.touch()
+        roles = {"t_p0": "AWPer", "ct_p0": "IGL"}
+
+        with patch("src.parser.demo_parser.DemoParser", return_value=mock):
+            out = parse_demo(dem, tmp_path / "out", player_roles=roles)
+
+        df = pd.read_parquet(out)
+        assert (df["t0_role"] == "AWPer").all()
+        assert (df["ct0_role"] == "IGL").all()
+        assert (df["t1_role"] == "").all()
 
     def test_multi_round_demo(self, tmp_path: Path):
-        plant_tick_1, plant_tick_2 = 3200, 7680
-        ticks_1 = list(range(max(0, plant_tick_1 - PRE_PLANT_SECS * TICK_RATE),
-                              plant_tick_1 + 1, DOWNSAMPLE))
-        ticks_2 = list(range(max(0, plant_tick_2 - PRE_PLANT_SECS * TICK_RATE),
-                              plant_tick_2 + 1, DOWNSAMPLE))
+        rs_1, plant_1 = 1000, 5120
+        rs_2, plant_2 = 6000, 10000
+        ticks_1 = _expected_ticks(rs_1, plant_1)
+        ticks_2 = _expected_ticks(rs_2, plant_2)
 
         mock = MagicMock()
-        mock.parse_event.return_value = pd.DataFrame({
-            "site": [0, 1],
-            "tick": [plant_tick_1, plant_tick_2],
-        })
+
+        def _parse_event(e, **kw):
+            if e == "bomb_planted":
+                return pd.DataFrame({"site": [0, 1], "tick": [plant_1, plant_2]})
+            if e == "round_freeze_end":
+                return pd.DataFrame({"tick": [rs_1, rs_2]})
+            return pd.DataFrame({"winner": pd.Series([], dtype=str), "tick": pd.Series([], dtype=int)})
+
+        mock.parse_event.side_effect = _parse_event
         mock.parse_ticks.side_effect = [
             _make_multi_tick_df(ticks_1),
             _make_multi_tick_df(ticks_2),

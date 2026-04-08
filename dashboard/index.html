@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>CS Prophet</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: #0d0d0d;
+      color: #fff;
+      font-family: 'Consolas', 'Courier New', monospace;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+    }
+
+    h1 {
+      font-size: 1.1em;
+      letter-spacing: 0.3em;
+      color: #e8b84b;
+      margin-bottom: 6px;
+    }
+
+    #meta {
+      font-size: 0.78em;
+      color: #666;
+      margin-bottom: 32px;
+      letter-spacing: 0.05em;
+    }
+
+    .probs {
+      display: flex;
+      gap: 64px;
+      margin-bottom: 28px;
+    }
+
+    .site { text-align: center; min-width: 120px; }
+
+    .site-letter {
+      font-size: 3.6em;
+      font-weight: bold;
+      line-height: 1;
+    }
+    .site-A .site-letter { color: #4ecdc4; }
+    .site-B .site-letter { color: #ff6b6b; }
+
+    .site-pct {
+      font-size: 2em;
+      margin-top: 6px;
+    }
+
+    /* split bar */
+    .bar-wrap {
+      width: 480px;
+      height: 14px;
+      background: #1a1a1a;
+      border-radius: 7px;
+      overflow: hidden;
+      display: flex;
+    }
+    .bar-a {
+      background: #4ecdc4;
+      height: 100%;
+      transition: width 0.35s ease;
+    }
+    .bar-b {
+      background: #ff6b6b;
+      height: 100%;
+      transition: width 0.35s ease;
+    }
+
+    /* prediction label */
+    #pred-label {
+      margin-top: 18px;
+      font-size: 0.85em;
+      color: #888;
+      letter-spacing: 0.1em;
+    }
+    #pred-label span { color: #fff; font-weight: bold; }
+
+    #dot {
+      margin-top: 28px;
+      font-size: 0.72em;
+      color: #444;
+    }
+    #dot.live { color: #4ecdc4; }
+  </style>
+</head>
+<body>
+
+  <h1>CS PROPHET</h1>
+  <div id="meta">waiting for CS2…</div>
+
+  <div class="probs">
+    <div class="site site-A">
+      <div class="site-letter">A</div>
+      <div class="site-pct" id="pct-a">—</div>
+    </div>
+    <div class="site site-B">
+      <div class="site-letter">B</div>
+      <div class="site-pct" id="pct-b">—</div>
+    </div>
+  </div>
+
+  <div class="bar-wrap">
+    <div class="bar-a" id="bar-a" style="width:50%"></div>
+    <div class="bar-b" id="bar-b" style="width:50%"></div>
+  </div>
+
+  <div id="pred-label">predicting → <span id="pred">…</span></div>
+  <div id="dot">● offline</div>
+
+  <script>
+    const $ = id => document.getElementById(id);
+
+    async function refresh() {
+      try {
+        const res  = await fetch('/state');
+        const d    = await res.json();
+
+        if (!d.map) return;
+
+        const pa = (d.A * 100).toFixed(1);
+        const pb = (d.B * 100).toFixed(1);
+
+        $('pct-a').textContent = pa + '%';
+        $('pct-b').textContent = pb + '%';
+        $('bar-a').style.width = pa + '%';
+        $('bar-b').style.width = pb + '%';
+
+        const pred = d.A >= d.B ? 'A' : 'B';
+        $('pred').textContent = pred;
+
+        $('meta').textContent =
+          `${d.map}  ·  Round ${d.round}  ·  CT ${d.ct_score} – T ${d.t_score}  ·  ${d.steps} steps`;
+
+        $('dot').textContent = '● live';
+        $('dot').className   = 'live';
+
+      } catch (_) {
+        $('dot').textContent = '● offline';
+        $('dot').className   = '';
+      }
+    }
+
+    setInterval(refresh, 400);
+    refresh();
+  </script>
+</body>
+</html>

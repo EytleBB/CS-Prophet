@@ -6,11 +6,12 @@ from src.utils.map_utils import classify_zone, normalize_coords
 
 class TestClassifyZone:
     def test_a_site_mirage(self):
-        # Centre of Mirage A site box
-        assert classify_zone(1080.0, -400.0, "de_mirage") == "A"
+        # A site: palace/ramp area, calibrated from demoparser2 coords
+        assert classify_zone(-1600.0, 200.0, "de_mirage") == "A"
 
     def test_b_site_mirage(self):
-        assert classify_zone(-670.0, 60.0, "de_mirage") == "B"
+        # B site: van/tunnel area
+        assert classify_zone(-500.0, -1800.0, "de_mirage") == "B"
 
     def test_mid_mirage(self):
         assert classify_zone(100.0, -200.0, "de_mirage") == "mid"
@@ -25,34 +26,35 @@ class TestClassifyZone:
         assert classify_zone(2000.0, 800.0, "de_inferno") == "A"
 
     def test_b_site_inferno(self):
-        assert classify_zone(500.0, -900.0, "de_inferno") == "B"
+        # B site: banana area, high Y in demoparser2 coords
+        assert classify_zone(500.0, 2800.0, "de_inferno") == "B"
 
     def test_a_site_dust2(self):
         assert classify_zone(1300.0, 2200.0, "de_dust2") == "A"
 
     def test_b_site_nuke(self):
-        # Centre of nuke B — x in [-900,-280], y in [230,1130]
-        assert classify_zone(-600.0, 680.0, "de_nuke") == "B"
+        # Nuke B is lower level — classified by Z < threshold
+        assert classify_zone(560.0, -863.0, "de_nuke", z=-700.0) == "B"
 
     def test_mid_ancient(self):
-        # Central ancient mid — x in [-180,930], y in [-690,370]
+        # Central ancient mid
         assert classify_zone(375.0, -160.0, "de_ancient") == "mid"
 
     def test_a_site_overpass(self):
-        # Centre of overpass A — x in [-1,1200], y in [700,1800]
-        assert classify_zone(600.0, 1250.0, "de_overpass") == "A"
+        # A site: upper bank area, calibrated from demoparser2 coords
+        assert classify_zone(-2200.0, 500.0, "de_overpass") == "A"
 
     def test_b_site_overpass(self):
-        # Centre of overpass B — x in [-1900,-700], y in [-900,200]
+        # B site: underpass/lower area
         assert classify_zone(-1300.0, -350.0, "de_overpass") == "B"
 
     def test_a_site_anubis(self):
-        # Centre of anubis A — x in [1400,2600], y in [-200,700]
-        assert classify_zone(2000.0, 250.0, "de_anubis") == "A"
+        # A site: upper right area, calibrated from demoparser2 coords
+        assert classify_zone(1200.0, 1800.0, "de_anubis") == "A"
 
     def test_b_site_anubis(self):
-        # Centre of anubis B — x in [-500,600], y in [-1000,-100]
-        assert classify_zone(50.0, -550.0, "de_anubis") == "B"
+        # B site: lower left / canal area
+        assert classify_zone(-1000.0, 700.0, "de_anubis") == "B"
 
 
 class TestNormalizeCoords:
