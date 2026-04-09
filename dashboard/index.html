@@ -2,152 +2,216 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>CS Prophet</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CS Prophet Dashboard</title>
   <style>
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-
+    :root {
+      --bg: #1a1a2e;
+      --card: #16213e;
+      --text: #ffffff;
+      --muted: #a0aec0;
+      --green: #4CAF50;
+      --blue: #2196F3;
+      --error: #f56565;
+    }
+    * { box-sizing: border-box; }
     body {
-      background: #0d0d0d;
-      color: #fff;
-      font-family: 'Consolas', 'Courier New', monospace;
+      margin: 0;
+      font-family: "Segoe UI", system-ui, -apple-system, sans-serif;
+      background: var(--bg);
+      color: var(--text);
       display: flex;
-      flex-direction: column;
-      align-items: center;
       justify-content: center;
-      height: 100vh;
+      align-items: center;
+      min-height: 100vh;
+      padding: 16px;
     }
-
-    h1 {
-      font-size: 1.1em;
-      letter-spacing: 0.3em;
-      color: #e8b84b;
-      margin-bottom: 6px;
+    .container {
+      width: 100%;
+      max-width: 600px;
+      background: var(--card);
+      border-radius: 14px;
+      padding: 20px;
+      box-shadow: 0 10px 40px rgba(0,0,0,0.35);
     }
-
-    #meta {
-      font-size: 0.78em;
-      color: #666;
-      margin-bottom: 32px;
-      letter-spacing: 0.05em;
-    }
-
-    .probs {
+    .header {
       display: flex;
-      gap: 64px;
-      margin-bottom: 28px;
+      justify-content: space-between;
+      align-items: baseline;
+      gap: 12px;
+      margin-bottom: 12px;
+      flex-wrap: wrap;
     }
-
-    .site { text-align: center; min-width: 120px; }
-
-    .site-letter {
-      font-size: 3.6em;
-      font-weight: bold;
-      line-height: 1;
+    .title { font-size: 1.25rem; font-weight: 700; }
+    .status {
+      font-size: 0.9rem;
+      color: var(--muted);
     }
-    .site-A .site-letter { color: #4ecdc4; }
-    .site-B .site-letter { color: #ff6b6b; }
-
-    .site-pct {
-      font-size: 2em;
-      margin-top: 6px;
+    .status.error { color: var(--error); }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+      margin-bottom: 16px;
     }
-
-    /* split bar */
-    .bar-wrap {
-      width: 480px;
-      height: 14px;
-      background: #1a1a1a;
-      border-radius: 7px;
+    .card {
+      background: rgba(255, 255, 255, 0.02);
+      border: 1px solid rgba(255,255,255,0.05);
+      border-radius: 10px;
+      padding: 12px;
+    }
+    .label { color: var(--muted); font-size: 0.85rem; }
+    .value { font-size: 1.1rem; font-weight: 600; }
+    .bar {
+      height: 30px;
+      border-radius: 8px;
       overflow: hidden;
       display: flex;
+      background: #0f162b;
+      border: 1px solid rgba(255,255,255,0.08);
     }
-    .bar-a {
-      background: #4ecdc4;
-      height: 100%;
-      transition: width 0.35s ease;
+    .bar .a { background: var(--green); }
+    .bar .b { background: var(--blue); }
+    .bar span {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      color: #0b1323;
+      text-shadow: 0 1px 2px rgba(0,0,0,0.2);
+      font-size: 0.9rem;
+      min-width: 48px;
     }
-    .bar-b {
-      background: #ff6b6b;
-      height: 100%;
-      transition: width 0.35s ease;
+    .confidence {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 10px;
+      margin-top: 14px;
     }
-
-    /* prediction label */
-    #pred-label {
-      margin-top: 18px;
-      font-size: 0.85em;
-      color: #888;
-      letter-spacing: 0.1em;
+    .confidence .badge {
+      text-align: center;
+      padding: 10px;
+      border-radius: 10px;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.06);
+      font-weight: 600;
     }
-    #pred-label span { color: #fff; font-weight: bold; }
-
-    #dot {
-      margin-top: 28px;
-      font-size: 0.72em;
-      color: #444;
-    }
-    #dot.live { color: #4ecdc4; }
+    .badge span { display: block; color: var(--muted); font-weight: 500; font-size: 0.85rem; }
+    .footer { margin-top: 16px; font-size: 0.85rem; color: var(--muted); text-align: center; }
   </style>
 </head>
 <body>
-
-  <h1>CS PROPHET</h1>
-  <div id="meta">waiting for CS2…</div>
-
-  <div class="probs">
-    <div class="site site-A">
-      <div class="site-letter">A</div>
-      <div class="site-pct" id="pct-a">—</div>
+  <div class="container">
+    <div class="header">
+      <div class="title">CS Prophet – Bombsite Probabilities</div>
+      <div id="status" class="status">Connecting…</div>
     </div>
-    <div class="site site-B">
-      <div class="site-letter">B</div>
-      <div class="site-pct" id="pct-b">—</div>
+
+    <div class="grid">
+      <div class="card">
+        <div class="label">Map</div>
+        <div id="map" class="value">—</div>
+      </div>
+      <div class="card">
+        <div class="label">Round</div>
+        <div id="round" class="value">—</div>
+      </div>
+      <div class="card">
+        <div class="label">CT Score</div>
+        <div id="ct" class="value">—</div>
+      </div>
+      <div class="card">
+        <div class="label">T Score</div>
+        <div id="t" class="value">—</div>
+      </div>
+      <div class="card">
+        <div class="label">Steps</div>
+        <div id="steps" class="value">—</div>
+      </div>
+      <div class="card">
+        <div class="label">State</div>
+        <div id="state" class="value">Waiting…</div>
+      </div>
     </div>
-  </div>
 
-  <div class="bar-wrap">
-    <div class="bar-a" id="bar-a" style="width:50%"></div>
-    <div class="bar-b" id="bar-b" style="width:50%"></div>
-  </div>
+    <div class="card" style="margin-bottom: 12px;">
+      <div class="label" style="margin-bottom: 8px;">Bombsite Likelihood</div>
+      <div class="bar">
+        <span id="bar-a" class="a" style="width: 50%;">A 50%</span>
+        <span id="bar-b" class="b" style="width: 50%;">B 50%</span>
+      </div>
+    </div>
 
-  <div id="pred-label">predicting → <span id="pred">…</span></div>
-  <div id="dot">● offline</div>
+    <div class="confidence">
+      <div class="badge" style="color: var(--green);">
+        <span>A Site</span>
+        <div id="conf-a">—</div>
+      </div>
+      <div class="badge" style="color: var(--blue);">
+        <span>B Site</span>
+        <div id="conf-b">—</div>
+      </div>
+    </div>
+
+    <div class="footer">Polling /state every 500 ms</div>
+  </div>
 
   <script>
-    const $ = id => document.getElementById(id);
+    const statusEl = document.getElementById('status');
+    const mapEl = document.getElementById('map');
+    const roundEl = document.getElementById('round');
+    const ctEl = document.getElementById('ct');
+    const tEl = document.getElementById('t');
+    const stepsEl = document.getElementById('steps');
+    const stateEl = document.getElementById('state');
+    const barA = document.getElementById('bar-a');
+    const barB = document.getElementById('bar-b');
+    const confA = document.getElementById('conf-a');
+    const confB = document.getElementById('conf-b');
 
-    async function refresh() {
+    function updateBars(a, b) {
+      const total = Math.max(a + b, 1);
+      const pctA = Math.round((a / total) * 100);
+      const pctB = Math.max(0, 100 - pctA);
+
+      barA.style.width = pctA + '%';
+      barB.style.width = pctB + '%';
+
+      barA.textContent = `A ${pctA}%`;
+      barB.textContent = `B ${pctB}%`;
+
+      confA.textContent = pctA + '%';
+      confB.textContent = pctB + '%';
+    }
+
+    async function poll() {
       try {
-        const res  = await fetch('/state');
-        const d    = await res.json();
+        const res = await fetch('/state', { cache: 'no-store' });
+        if (!res.ok) throw new Error('HTTP ' + res.status);
+        const data = await res.json();
 
-        if (!d.map) return;
+        statusEl.textContent = 'Live';
+        statusEl.classList.remove('error');
 
-        const pa = (d.A * 100).toFixed(1);
-        const pb = (d.B * 100).toFixed(1);
+        mapEl.textContent = data.map ?? '—';
+        roundEl.textContent = data.round ?? '—';
+        ctEl.textContent = data.ct_score ?? '—';
+        tEl.textContent = data.t_score ?? '—';
+        stepsEl.textContent = data.steps ?? '—';
+        stateEl.textContent = 'Connected';
 
-        $('pct-a').textContent = pa + '%';
-        $('pct-b').textContent = pb + '%';
-        $('bar-a').style.width = pa + '%';
-        $('bar-b').style.width = pb + '%';
-
-        const pred = d.A >= d.B ? 'A' : 'B';
-        $('pred').textContent = pred;
-
-        $('meta').textContent =
-          `${d.map}  ·  Round ${d.round}  ·  CT ${d.ct_score} – T ${d.t_score}  ·  ${d.steps} steps`;
-
-        $('dot').textContent = '● live';
-        $('dot').className   = 'live';
-
-      } catch (_) {
-        $('dot').textContent = '● offline';
-        $('dot').className   = '';
+        const a = Number(data.A) || 0;
+        const b = Number(data.B) || 0;
+        updateBars(a, b);
+      } catch (err) {
+        statusEl.textContent = 'Disconnected';
+        statusEl.classList.add('error');
+        stateEl.textContent = 'Waiting…';
       }
     }
 
-    setInterval(refresh, 400);
-    refresh();
+    poll();
+    setInterval(poll, 500);
   </script>
 </body>
 </html>

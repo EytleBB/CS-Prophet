@@ -1,0 +1,41 @@
+[build-system]
+requires = ["setuptools>=68", "setuptools-scm"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "cs-prophet"
+version = "0.1.0"
+requires-python = ">=3.10"
+dependencies = [
+    "demoparser2>=1.5",
+    "torch>=2.2",
+    "pyarrow>=15",
+    "omegaconf>=2.3",
+    "flask>=3.0",
+    "pandas>=2.2",
+    "numpy>=1.26",
+    "tqdm>=4.66",
+    "pyyaml>=6.0.1",
+    "curl_cffi>=0.7",
+    "beautifulsoup4>=4.12",
+    "rarfile>=4.1",
+    "onnxruntime>=1.17",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest",
+    "pytest-cov",
+    "jupyter",
+    "matplotlib",
+    "seaborn",
+    "tensorboard",
+    "streamlit",
+]
+
+[project.scripts]
+cs-prophet = "src.inference.realtime_engine:main"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["src*"]

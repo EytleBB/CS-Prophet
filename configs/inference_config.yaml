@@ -1,0 +1,8 @@
+checkpoint_path: checkpoints/best.pt
+device: cpu  # change to cuda for GPU inference
+port: 3000
+gsi_throttle: 0.125
+sequence_length: 720
+dashboard_poll_ms: 500
+log_level: INFO
+map_name: de_mirage  # default map

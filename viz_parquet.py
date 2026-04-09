@@ -47,7 +47,6 @@ def round_table(df: pd.DataFrame) -> str:
             steps=("step", "count"),
             ct_score=("ct_score", "first"),
             t_score=("t_score", "first"),
-            map_zone=("map_zone", lambda s: s.value_counts().idxmax()),
         )
         .reset_index()
     )
@@ -62,14 +61,13 @@ def round_table(df: pd.DataFrame) -> str:
             f"<td style='background:{color};font-weight:bold;text-align:center'>{site}</td>"
             f"<td>{int(r['ct_score'])}–{int(r['t_score'])}</td>"
             f"<td>{int(r['steps'])}</td>"
-            f"<td>{r['map_zone']}</td>"
             f"</tr>"
         )
 
     return (
         "<table border='1' cellpadding='4' cellspacing='0' style='border-collapse:collapse;font-size:13px'>"
         "<thead><tr>"
-        "<th>Round</th><th>Bomb Site</th><th>Score CT–T</th><th>Steps</th><th>Dominant Zone</th>"
+        "<th>Round</th><th>Bomb Site</th><th>Score CT–T</th><th>Steps</th>"
         "</tr></thead>"
         "<tbody>" + "".join(rows_html) + "</tbody>"
         "</table>"

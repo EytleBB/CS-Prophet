@@ -1,0 +1,33 @@
+model:
+  input_dim: 275
+  d_model: 128
+  nhead: 4
+  num_layers: 2
+  dropout: 0.3
+  num_classes: 2
+
+training:
+  epochs: 1
+  batch_size: 8
+  gradient_accumulation_steps: 16
+  learning_rate: 1.0e-4
+  weight_decay: 1.0e-3
+  early_stop_patience: 10
+  val_split: 0.1
+  test_split: 0.1
+  seed: 42
+  use_amp: true
+  focal_loss_gamma: 2.0
+
+data:
+  raw_dir: data/raw/demos
+  processed_dir: data/processed
+  splits_dir: data/splits
+  sequence_length: 720
+  tick_rate: 64
+  target_tick_rate: 8
+
+logging:
+  log_dir: runs/
+  save_dir: checkpoints/smoke/
+  log_interval: 1

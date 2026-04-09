@@ -1,6 +1,6 @@
 # CS Prophet
 
-CS2 round-outcome prediction using a Transformer trained on demo event sequences.
+CS2 bomb plant site prediction (A/B) using a Transformer trained on demo event sequences.
 
 ## Project Structure
 
@@ -38,6 +38,6 @@ pytest tests/
 
 ## Model
 
-A Transformer encoder trained to predict CT/T win probability from a sequence of
+A Transformer encoder trained to predict bomb plant site probabilities (A/B) from a sequence of
 in-round events (kills, utility, economy). The first-token output is passed through
 a 2-class linear head.

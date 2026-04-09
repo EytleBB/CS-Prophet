@@ -1,7 +1,7 @@
 """Demo parser — reads CS2 .dem files and writes per-round state sequences (parquet).
 
 Output schema (one row per step):
-    demo_name, round_num, step, tick, bomb_site, map_zone,
+    demo_name, round_num, step, tick, bomb_site,
     ct_score, t_score, ct_losing_streak, t_losing_streak,
     t{0..4}_{x,y,z,hp,armor,helmet,alive,weapon,has_smoke,has_flash,
              has_he,has_molotov,flash_duration,equip_value,is_scoped,is_defusing},
@@ -18,7 +18,7 @@ import numpy as np
 import pandas as pd
 
 from src.features.label_extractor import extract_bomb_site, get_plant_ticks
-from src.utils.map_utils import classify_zone, normalize_coords
+from src.utils.map_utils import normalize_coords
 
 try:
     from demoparser2 import DemoParser
@@ -308,10 +308,6 @@ def _build_state_row(
     t_rows = tick_slice[tick_slice["team_name"] == _TEAM_T].sort_values("name")
     ct_rows = tick_slice[tick_slice["team_name"] == _TEAM_CT].sort_values("name")
 
-    t_x_mean = float(t_rows["X"].mean()) if not t_rows.empty else 0.0
-    t_y_mean = float(t_rows["Y"].mean()) if not t_rows.empty else 0.0
-    t_z_mean = float(t_rows["Z"].mean()) if not t_rows.empty else 0.0
-
     # Global streak info (same value for all players)
     first = tick_slice.iloc[0] if not tick_slice.empty else pd.Series(dtype=object)
     ct_streak = int(first.get("ct_losing_streak", 0)) if not tick_slice.empty else 0
@@ -322,7 +318,6 @@ def _build_state_row(
         "step":             step,
         "tick":             tick,
         "bomb_site":        bomb_site,
-        "map_zone":         classify_zone(t_x_mean, t_y_mean, map_name, z=t_z_mean),
         "ct_score":         ct_score,
         "t_score":          t_score,
         "ct_losing_streak": ct_streak,

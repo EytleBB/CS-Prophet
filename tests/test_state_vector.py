@@ -5,13 +5,12 @@ import pandas as pd
 import pytest
 from src.features.state_vector import (
     FEATURE_DIM, ROLE_IDX, WEAPON_CAT_IDX, build_state_vector,
-    _PLAYER_STRIDE, _CT_BASE, _ZONE_BASE, _GLOBAL_BASE,
+    _PLAYER_STRIDE, _CT_BASE, _GLOBAL_BASE,
 )
 
 
-def _make_row(map_zone: str = "A", **overrides) -> pd.Series:
+def _make_row(**overrides) -> pd.Series:
     data: dict = {
-        "map_zone":         map_zone,
         "ct_score":         0,
         "t_score":          0,
         "round_num":        1,
@@ -42,13 +41,13 @@ def _make_row(map_zone: str = "A", **overrides) -> pd.Series:
 
 
 class TestFeatureDim:
-    def test_constant_is_279(self):
-        assert FEATURE_DIM == 279
+    def test_constant_is_275(self):
+        assert FEATURE_DIM == 275
 
 
 class TestBuildStateVector:
     def test_output_shape(self):
-        assert build_state_vector(_make_row()).shape == (279,)
+        assert build_state_vector(_make_row()).shape == (275,)
 
     def test_dtype_is_float32(self):
         assert build_state_vector(_make_row()).dtype == np.float32
@@ -76,24 +75,6 @@ class TestBuildStateVector:
         vec = build_state_vector(_make_row())
         assert np.all(vec >= 0.0)
         assert np.all(vec <= 1.0)
-
-
-class TestZoneOneHot:
-    def test_a(self):
-        vec = build_state_vector(_make_row(map_zone="A"))
-        assert vec[_ZONE_BASE + 0] == 1.0
-        assert vec[_ZONE_BASE + 1] == 0.0
-        assert vec[_ZONE_BASE + 2] == 0.0
-        assert vec[_ZONE_BASE + 3] == 0.0
-
-    def test_b(self):
-        assert build_state_vector(_make_row(map_zone="B"))[_ZONE_BASE + 1] == 1.0
-
-    def test_mid(self):
-        assert build_state_vector(_make_row(map_zone="mid"))[_ZONE_BASE + 2] == 1.0
-
-    def test_other(self):
-        assert build_state_vector(_make_row(map_zone="other"))[_ZONE_BASE + 3] == 1.0
 
 
 class TestRoleOneHot:

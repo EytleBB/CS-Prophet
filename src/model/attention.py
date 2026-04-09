@@ -10,7 +10,7 @@ import torch.nn as nn
 class PositionalEncoding(nn.Module):
     """Sinusoidal positional encoding (Vaswani et al. 2017)."""
 
-    def __init__(self, d_model: int, dropout: float = 0.1, max_len: int = 300) -> None:
+    def __init__(self, d_model: int, dropout: float = 0.1, max_len: int = 1024) -> None:
         super().__init__()
         if d_model % 2 != 0:
             raise ValueError(f"d_model must be even for sinusoidal encoding; got {d_model}")

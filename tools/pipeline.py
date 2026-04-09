@@ -35,11 +35,21 @@ import yaml
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from tools.hltv.manifest import append_record, load_seen_match_ids, log_failure
+from tools.hltv.manifest import log_failure
 from tools.hltv.parser import get_map_from_dem_filename, parse_match_page, parse_results_page
 from tools.hltv.scraper import HLTVScraper
 from tools.hltv.downloader import extract_archive
 from src.parser.demo_parser import parse_demo
+
+
+def _seen_match_ids_from_parquets(processed_dir: Path) -> set[str]:
+    """Extract match_ids from existing parquet filenames (e.g. '2389251_de_mirage.parquet')."""
+    seen = set()
+    for p in processed_dir.glob("*.parquet"):
+        parts = p.stem.split("_", 1)
+        if parts[0].isdigit():
+            seen.add(parts[0])
+    return seen
 
 
 def load_config(path: str) -> dict:
@@ -48,7 +58,7 @@ def load_config(path: str) -> dict:
     with open(path, encoding="utf-8") as f:
         cfg = yaml.safe_load(f)
     out = cfg.setdefault("output", {})
-    for key in ("demos_dir", "manifest", "failed_log"):
+    for key in ("demos_dir", "failed_log"):
         if key in out and not os.path.isabs(out[key]):
             out[key] = os.path.normpath(os.path.join(cfg_dir, out[key]))
     return cfg
@@ -71,11 +81,12 @@ def _already_processed(match_id: str, map_name: str, processed_dir: Path) -> boo
 def run(cfg: dict, dry_run: bool = False) -> None:
     rate_cfg = cfg["rate_limit"]
     out_cfg = cfg["output"]
-    processed_dir = Path("data/processed")
+    project_root = Path(__file__).resolve().parent.parent
+    processed_dir = project_root / "data" / "processed"
     processed_dir.mkdir(parents=True, exist_ok=True)
 
     scraper = HLTVScraper(rate_cfg)
-    seen = load_seen_match_ids(out_cfg["manifest"])
+    seen = _seen_match_ids_from_parquets(processed_dir)
     supported_maps = set(cfg["maps"])
     allowed_events = cfg["allowed_events"]
 
@@ -85,19 +96,20 @@ def run(cfg: dict, dry_run: bool = False) -> None:
     existing_parquets = len(list(processed_dir.glob("*.parquet")))
     target = cfg["target_demos"]
     downloads_since_pause = 0
+    new_downloads = 0
     parsed_count = 0
     skipped_count = 0
     failed_count = 0
 
     print(f"Pipeline mode: download → parse → delete")
-    print(f"Existing parquets: {existing_parquets}  |  Target demos: {target}")
+    print(f"Existing parquets: {existing_parquets}  |  New to download: {target}")
+    print(f"Already seen matches (from parquets): {len(seen)}")
     print(f"Cutoff date: {start_date}")
     print(f"Allowed events: {'all (no filter)' if not allowed_events else len(allowed_events)}")
     print()
 
     offset = 0
-    total_downloaded = len(seen)
-    while total_downloaded < target:
+    while new_downloads < target:
         url = build_results_url(offset)
         print(f"Fetching results page offset={offset} ...")
         try:
@@ -116,7 +128,7 @@ def run(cfg: dict, dry_run: bool = False) -> None:
             break
 
         for match in matches:
-            if total_downloaded >= target:
+            if new_downloads >= target:
                 break
             match_id = match["match_id"]
             if match_id in seen:
@@ -194,19 +206,8 @@ def run(cfg: dict, dry_run: bool = False) -> None:
                         print(f"    [fail] {match_id}_{map_name}: {str(e)[:100]}")
                         failed_count += 1
 
-                # Record in manifest regardless of parse success
-                record = {
-                    "match_id": match_id,
-                    "demo_file": f"{match_id}_pipeline",
-                    "map": "multi",
-                    "date": match["date"],
-                    "event": match["event"],
-                    "team_ct": match_data["team_ct"],
-                    "team_t": match_data["team_t"],
-                }
-                append_record(out_cfg["manifest"], record)
                 seen.add(match_id)
-                total_downloaded += 1
+                new_downloads += 1
 
                 if match_parsed > 0:
                     downloads_since_pause += 1

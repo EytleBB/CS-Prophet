@@ -27,7 +27,6 @@ def _make_parquet(
                 "step": step,
                 "tick": step * 8,
                 "bomb_site": bomb_site,
-                "map_zone": "A",
             }
             for side in ("t", "ct"):
                 for i in range(5):

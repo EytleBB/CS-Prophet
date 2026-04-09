@@ -58,7 +58,13 @@
       "Bash(mv \"D:/CSAI/data/raw/demos/\"*.dem \"D:/CSAI/CS_Prophet/data/raw/demos/\")",
       "Bash(mv \"D:/CSAI/data/raw/manifest.json\" \"D:/CSAI/CS_Prophet/data/raw/manifest.json\")",
       "Bash(mv \"D:/CSAI/data/raw/failed.json\" \"D:/CSAI/CS_Prophet/data/raw/failed.json\")",
-      "Bash(ls D:\\\\CSAI\\\\CS_Prophet\\\\data/processed/*.parquet)"
+      "Bash(ls D:\\\\CSAI\\\\CS_Prophet\\\\data/processed/*.parquet)",
+      "Skill(codex:rescue)",
+      "Bash(codex --help)",
+      "Read(//c/Users/Cr/.codex/**)",
+      "Bash(ls D:/CSAI/CS_Prophet/data/processed/*.parquet)",
+      "Bash(D:/EDGE/python.exe -c ':*)",
+      "Bash(node:*)"
     ]
   }
 }

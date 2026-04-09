@@ -4,13 +4,12 @@ from __future__ import annotations
 import numpy as np
 import pandas as pd
 
-FEATURE_DIM: int = 279
+FEATURE_DIM: int = 275
 # Layout
 # ──────────────────────────────────────────────────────────────────
 # [0:135]    T players 0–4  ×  27 dims each
 # [135:270]  CT players 0–4 ×  27 dims each
-# [270:274]  map_zone one-hot  (A=270, B=271, mid=272, other=273)
-# [274:279]  global: ct_score/30, t_score/30, round_num/30,
+# [270:275]  global: ct_score/30, t_score/30, round_num/30,
 #                    ct_losing_streak/5, t_losing_streak/5
 #
 # Per-player stride = 27:
@@ -29,10 +28,7 @@ FEATURE_DIM: int = 279
 
 _PLAYER_STRIDE: int = 27
 _CT_BASE: int = 135
-_ZONE_BASE: int = 270
-_GLOBAL_BASE: int = 274
-
-ZONE_IDX: dict[str, int] = {"A": 0, "B": 1, "mid": 2, "other": 3}
+_GLOBAL_BASE: int = 270
 
 PLAYER_FIELDS: tuple[str, ...] = ("x", "y", "z", "hp", "armor", "helmet", "alive")
 NORMALISE: frozenset[str] = frozenset({"hp", "armor"})
@@ -68,7 +64,7 @@ def build_state_vector(row: pd.Series) -> np.ndarray:
         row: One row from a parsed demo parquet (pd.Series with column-name index).
 
     Returns:
-        np.ndarray of shape (279,) and dtype float32.
+        np.ndarray of shape (275,) and dtype float32.
     """
     # Convert to dict once — avoids pandas 3.x Series.__getitem__ cache bug
     d = row.to_dict()
@@ -112,12 +108,7 @@ def build_state_vector(row: pd.Series) -> np.ndarray:
             # is_defusing [26]
             vec[pb + 26] = float(bool(d.get(f"{side}{i}_is_defusing", False)))
 
-    # Map zone one-hot [270:274]
-    zone_str = str(d.get("map_zone", "other"))
-    zone_idx = ZONE_IDX.get(zone_str, 3)
-    vec[_ZONE_BASE + zone_idx] = 1.0
-
-    # Global features [274:279]
+    # Global features [270:275]
     vec[_GLOBAL_BASE + 0] = min(1.0, float(d.get("ct_score", 0)) / _SCORE_MAX)
     vec[_GLOBAL_BASE + 1] = min(1.0, float(d.get("t_score", 0)) / _SCORE_MAX)
     vec[_GLOBAL_BASE + 2] = min(1.0, float(d.get("round_num", 0)) / _SCORE_MAX)

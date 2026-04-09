@@ -1,5 +1,5 @@
 model:
-  input_dim: 279       # 10 players × 27 features + 4 map_zone + 5 global = 279
+  input_dim: 275       # 10 players × 27 features + 5 global = 275
   d_model: 128
   nhead: 4
   num_layers: 2

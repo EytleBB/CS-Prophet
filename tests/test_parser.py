@@ -151,8 +151,8 @@ class TestBuildStateRow:
             for i in range(5):
                 assert row[f"{side}{i}_role"] == ""
 
-    def test_map_zone_key_present(self):
-        assert "map_zone" in self._row()
+    def test_map_zone_key_absent(self):
+        assert "map_zone" not in self._row()
 
 
 # ── _extract_sequence ─────────────────────────────────────────────────────

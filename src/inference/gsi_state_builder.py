@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from src.utils.map_utils import classify_zone, normalize_coords
+from src.utils.map_utils import normalize_coords
 
 # GSI weapon name (weapon_xxx) → our training category
 _WEAPON_CATS: dict[str, str] = {
@@ -14,7 +14,7 @@ _WEAPON_CATS: dict[str, str] = {
     "weapon_ak47": "rifle", "weapon_m4a1": "rifle",
     "weapon_m4a1_silencer": "rifle", "weapon_famas": "rifle",
     "weapon_galilar": "rifle", "weapon_sg556": "rifle",
-    "weapon_aug": "rifle", "weapon_scar20": "rifle", "weapon_g3sg1": "rifle",
+    "weapon_aug": "rifle", "weapon_scar20": "sniper", "weapon_g3sg1": "sniper",
     "weapon_awp": "sniper", "weapon_ssg08": "sniper",
     "weapon_mp9": "smg", "weapon_mp5sd": "smg", "weapon_ump45": "smg",
     "weapon_p90": "smg", "weapon_bizon": "smg", "weapon_mac10": "smg", "weapon_mp7": "smg",
@@ -85,23 +85,11 @@ def build_row_from_gsi(
     t_players.sort(key=lambda p: p.get("name", ""))
     ct_players.sort(key=lambda p: p.get("name", ""))
 
-    # Compute map_zone from mean T raw position (before normalization)
-    t_raw = [_parse_pos(p.get("position", "0,0,0")) for p in t_players
-             if int(p.get("state", {}).get("health", 0)) > 0]
-    if t_raw:
-        mx = sum(c[0] for c in t_raw) / len(t_raw)
-        my = sum(c[1] for c in t_raw) / len(t_raw)
-        mz = sum(c[2] for c in t_raw) / len(t_raw)
-        map_zone = classify_zone(mx, my, map_name, z=mz)
-    else:
-        map_zone = "other"
-
     row: dict = {
         "step":             step,
         "tick":             step,
         "round_num":        round_num,
         "bomb_site":        "other",  # unknown at inference time
-        "map_zone":         map_zone,
         "ct_score":         ct_score,
         "t_score":          t_score,
         "ct_losing_streak": ct_streak,

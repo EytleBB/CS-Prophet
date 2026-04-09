@@ -3,7 +3,7 @@
 ## Project Purpose
 Transformer-based CS2 professional-match prediction system.
 Core task: given a round's game-state sequence up to the current tick,
-predict bomb plant site → P(A) / P(B) / P(other).
+predict bomb plant site → P(A) / P(B) (2-class; rounds without confirmed A/B plant are excluded).
 
 ## Repository Layout
 ```
@@ -27,7 +27,7 @@ CS_Prophet/
 ├── dashboard/            ← app.py (Phase 3)
 ├── configs/              ← train_config.yaml
 ├── notebooks/            ← 01_eda.ipynb
-└── tests/                ← 111 tests, all passing
+└── tests/                ← 155 tests, all passing
 ```
 
 ## Phase Status
@@ -53,15 +53,15 @@ CS_Prophet/
 
 ## Key Design Decisions
 - Tick rate: 64 Hz raw → downsampled to **8 ticks/sec** (every 8th tick)
-- Sequence length: **30 s pre-plant** = 240 steps max
-- Labels: **A / B / other** (3-class), derived from `bomb_planted` event `site` field
+- Sequence length: **90 s** = 720 steps max (at 8 ticks/s)
+- Labels: **A / B** (2-class); rounds without confirmed A/B plant are skipped in dataset
 - Players padded to 5T + 5CT; missing players zero-padded
 - Coordinates normalised to [0, 1] via per-map bounding boxes in `map_utils.py`
-- Feature vector: 279 dims — [0:135] T-players, [135:270] CT-players, [270:274] zone one-hot, [274:279] global
+- Feature vector: 275 dims — [0:135] T-players, [135:270] CT-players, [270:275] global
 - Model reads from last **real** (non-padded) timestep using src_key_padding_mask
 - Checkpoint saves `model_config` so `RoundPredictor` can self-describe
 
-## Feature Vector Layout (279 dims)
+## Feature Vector Layout (275 dims)
 ```
 Per-player stride = 27 dims:
   [0:7]   x, y, z, hp/100, armor/100, helmet, alive
@@ -78,16 +78,15 @@ Per-player stride = 27 dims:
 
 [0:135]    T players 0–4  × 27
 [135:270]  CT players 0–4 × 27
-[270:274]  map_zone one-hot: A=270, B=271, mid=272, other=273
-[274]      ct_score / 30
-[275]      t_score / 30
-[276]      round_num / 30
-[277]      ct_losing_streak / 5
-[278]      t_losing_streak / 5
+[270]      ct_score / 30
+[271]      t_score / 30
+[272]      round_num / 30
+[273]      ct_losing_streak / 5
+[274]      t_losing_streak / 5
 ```
 
 ## BombSiteTransformer Architecture
-1. Split 279-dim input → T-side (135 player + 4 zone + 5 global = 144-dim) and CT-side (135-dim)
+1. Split 275-dim input → T-side (135 player + 5 global = 140-dim) and CT-side (135-dim)
 2. Project both to d_model with learned linear layers
 3. Add sinusoidal positional encoding independently to each stream
 4. Cross-attention: T queries CT to model adversarial interaction
@@ -104,7 +103,6 @@ Flat table — one row per (demo, round, step):
 | `step` | int | 0-based within round (max 240) |
 | `tick` | int | original demo tick |
 | `bomb_site` | str | 'A', 'B', or 'other' |
-| `map_zone` | str | mean T position zone: 'A','B','mid','other' |
 | `ct_score`, `t_score` | int | score at round start |
 | `ct_losing_streak`, `t_losing_streak` | int | consecutive losses |
 | `t{i}_{x,y,z}` | float | normalised position, i=0..4 |
