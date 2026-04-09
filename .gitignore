@@ -12,3 +12,8 @@ data/splits/
 *.ckpt
 *.onnx
 tools/hltv_secrets.yaml
+tools/portable/
+checkpoints/smoke/portable_copy/
+checkpoints/smoke/portable_verify/
+checkpoints/smoke/extract_test/
+.tmp/
