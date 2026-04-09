@@ -1,0 +1,6 @@
+# Full deps for pipeline mode (run_pipeline.py)
+-r requirements.txt
+demoparser2>=0.40
+pyarrow>=14.0
+pandas>=2.0
+numpy>=1.24

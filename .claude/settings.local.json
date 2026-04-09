@@ -64,7 +64,23 @@
       "Read(//c/Users/Cr/.codex/**)",
       "Bash(ls D:/CSAI/CS_Prophet/data/processed/*.parquet)",
       "Bash(D:/EDGE/python.exe -c ':*)",
-      "Bash(node:*)"
+      "Bash(node:*)",
+      "WebFetch(domain:www.7-zip.org)",
+      "Bash(rm -f D:/CSAI/CS_Prophet/tools/portable/7z.exe D:/CSAI/CS_Prophet/tools/portable/7z.dll)",
+      "Bash(rm -rf D:/CSAI/CS_Prophet/tools/portable/dist/_7z_tmp)",
+      "Bash(D:/CSAI/CS_Prophet/tools/portable/7z.exe)",
+      "Bash(dist/python/python.exe -m pip install --no-index --find-links dist/wheels pygments --no-warn-script-location)",
+      "Bash(set PYTHONNOUSERSITE=1)",
+      "Bash(PYTHONNOUSERSITE=1 dist/python/python.exe -m pip install --no-index --find-links dist/wheels --target dist/python/Lib/site-packages pygments --no-warn-script-location)",
+      "Bash(dist/python/python.exe -c ':*)",
+      "Bash(PYTHONNOUSERSITE=1 dist/python/python.exe run_download.py --help)",
+      "Bash(PYTHONNOUSERSITE=1 dist/python/python.exe run_pipeline.py --help)",
+      "Bash(D:/CSAI/CS_Prophet/tools/portable/7z.exe i:*)",
+      "Bash(/tmp/7z_test/extracted/_7z.exe i:*)",
+      "Bash(./_7z.exe i:*)",
+      "Bash(cp _7z.exe 7z.exe)",
+      "Bash(cp _7z.dll 7z.dll)",
+      "Bash(./7z.exe i:*)"
     ]
   }
 }
