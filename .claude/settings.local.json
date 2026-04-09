@@ -80,7 +80,9 @@
       "Bash(./_7z.exe i:*)",
       "Bash(cp _7z.exe 7z.exe)",
       "Bash(cp _7z.dll 7z.dll)",
-      "Bash(./7z.exe i:*)"
+      "Bash(./7z.exe i:*)",
+      "Bash(gh repo:*)",
+      "Bash(gh release create v1.0.0 dist-portable.zip --repo EytleBB/CS-HLTV_Downloader --title 'v1.0.0 — Portable Distribution' --notes 'Portable HLTV demo downloader & parser bundle.:*)"
     ]
   }
 }
