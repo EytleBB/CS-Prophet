@@ -17,7 +17,7 @@ class RoundPredictor:
         self.device = torch.device(device)
         checkpoint = torch.load(checkpoint_path, map_location=self.device)
         model_config = checkpoint["model_config"]
-        self.model = BombSiteTransformer(**model_config)
+        self.model = BombSiteTransformer(**model_config).to(self.device)
         self.model.load_state_dict(checkpoint["model_state"])
         self.model.eval()
 
@@ -30,7 +30,7 @@ class RoundPredictor:
         Returns:
             dict with keys 'A', 'B' — probabilities summing to 1.0.
         """
-        x = torch.tensor(features, dtype=torch.float32).unsqueeze(0).to(self.device)
+        x = torch.tensor(features, dtype=torch.float32, device=self.device).unsqueeze(0)
         src_key_padding_mask = (x.abs().sum(dim=-1) == 0)
         with torch.no_grad():
             logits = self.model(x, src_key_padding_mask=src_key_padding_mask)

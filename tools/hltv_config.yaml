@@ -1,3 +1,7 @@
+# Proxy for school/restricted networks (e.g. "http://127.0.0.1:7890")
+# Also reads HTTPS_PROXY / HTTP_PROXY / ALL_PROXY env vars as fallback
+proxy: "http://127.0.0.1:7897"
+
 target_demos: 1000
 # Safety backstop — don't fetch matches older than this many days
 cutoff_days: 400
@@ -46,4 +50,5 @@ rate_limit:
 
 output:
   demos_dir: ../data/raw/demos
-  failed_log: ../data/raw/failed.json
+  manifest: ../data/raw/manifest.jsonl
+  failed_log: ../data/raw/failed.jsonl

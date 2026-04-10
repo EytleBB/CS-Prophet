@@ -11,7 +11,13 @@ Output schema (one row per step):
 from __future__ import annotations
 
 import logging
+import sys
 from pathlib import Path
+
+# Ensure project root is on sys.path so `src.*` imports work
+_project_root = str(Path(__file__).resolve().parent.parent.parent)
+if _project_root not in sys.path:
+    sys.path.insert(0, _project_root)
 from typing import Optional
 
 import numpy as np
@@ -378,3 +384,16 @@ def _build_state_row(
                 row[f"{prefix}_is_defusing"]   = False
 
     return row
+
+
+if __name__ == "__main__":
+    import argparse
+
+    ap = argparse.ArgumentParser(description="Batch-parse CS2 .dem files to parquet")
+    ap.add_argument("dem_dir", nargs="?", default="data/raw/demos",
+                    help="Directory containing .dem files")
+    ap.add_argument("output_dir", nargs="?", default="data/processed",
+                    help="Directory for output parquet files")
+    args = ap.parse_args()
+    results = parse_demos_batch(args.dem_dir, args.output_dir)
+    print(f"Done. {len(results)} parquets written.")

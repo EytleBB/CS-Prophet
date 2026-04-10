@@ -19,7 +19,12 @@ if hasattr(sys.stdout, "reconfigure"):
 if hasattr(sys.stderr, "reconfigure"):
     sys.stderr.reconfigure(encoding="utf-8", errors="replace")
 
+import functools
+
 import yaml
+
+# Force unbuffered print so output is visible in non-TTY (background) mode
+print = functools.partial(print, flush=True)  # type: ignore[assignment]
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
@@ -65,7 +70,7 @@ def run(cfg: dict, dry_run: bool = False) -> None:
     out_cfg = cfg["output"]
     os.makedirs(out_cfg["demos_dir"], exist_ok=True)
 
-    scraper = HLTVScraper(rate_cfg)
+    scraper = HLTVScraper(rate_cfg, proxy=cfg.get("proxy"))
     seen = load_seen_match_ids(out_cfg["manifest"])
     supported_maps = set(cfg["maps"])
     allowed_events = cfg["allowed_events"]
@@ -119,6 +124,7 @@ def run(cfg: dict, dry_run: bool = False) -> None:
             try:
                 match_html = scraper.get(match["url"])
             except Exception as e:
+                print(f"    [error] match page failed: {e}")
                 log_failure(out_cfg["failed_log"], match_id, f"match page: {e}")
                 continue
 

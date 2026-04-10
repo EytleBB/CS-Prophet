@@ -82,7 +82,13 @@
       "Bash(cp _7z.dll 7z.dll)",
       "Bash(./7z.exe i:*)",
       "Bash(gh repo:*)",
-      "Bash(gh release create v1.0.0 dist-portable.zip --repo EytleBB/CS-HLTV_Downloader --title 'v1.0.0 — Portable Distribution' --notes 'Portable HLTV demo downloader & parser bundle.:*)"
+      "Bash(gh release create v1.0.0 dist-portable.zip --repo EytleBB/CS-HLTV_Downloader --title 'v1.0.0 — Portable Distribution' --notes 'Portable HLTV demo downloader & parser bundle.:*)",
+      "Bash(taskkill:*)",
+      "Bash(PYTHONPATH=. python -m src.parser.demo_parser)",
+      "Bash(D:/EDGE/python.exe -m src.inference.realtime_engine --checkpoint checkpoints/best.pt --device cuda)",
+      "Bash(kill %1)",
+      "Bash(wait)",
+      "Bash(echo \"PID: $!\")"
     ]
   }
 }

@@ -25,9 +25,8 @@ from src.inference.predictor import RoundPredictor
 
 logger = logging.getLogger(__name__)
 
-_MAX_STEPS   = 720
-_DASHBOARD   = Path(__file__).parent.parent.parent / "dashboard"
-_LIVE_PHASES = {"live"}
+_MAX_STEPS = 720
+_DASHBOARD = Path(__file__).parent.parent.parent / "dashboard"
 
 
 class _GameState:
@@ -38,6 +37,8 @@ class _GameState:
         self._window: collections.deque = collections.deque(maxlen=_MAX_STEPS)
         self._round  = -1
         self._step   = 0
+        self._prev_round_phase = ""
+        self._frozen = False          # True after bomb plant / round over
         self.map_name  = ""
         self.round_num = 0
         self.ct_score  = 0
@@ -45,21 +46,51 @@ class _GameState:
         self.prediction: dict[str, float] = {"A": 0.5, "B": 0.5}
 
     def update(self, gsi: dict, predictor: RoundPredictor) -> None:
-        map_info  = gsi.get("map", {})
-        map_name  = map_info.get("name", "")
-        round_num = int(map_info.get("round", 0))
-        phase     = map_info.get("phase", "")
+        map_info   = gsi.get("map", {})
+        round_info = gsi.get("round", {})
+        map_name   = map_info.get("name", "")
+        round_num  = int(map_info.get("round", 0))
+        map_phase  = map_info.get("phase", "")
+        round_phase = round_info.get("phase", "")
+        bomb_state  = round_info.get("bomb", "")
 
-        if phase not in _LIVE_PHASES or not map_name:
+        logger.info("GSI: map=%s round=%s map_phase=%s round_phase=%s bomb=%s",
+                     map_name, round_num, map_phase, round_phase, bomb_state)
+
+        # Only accept data when the match is live
+        if map_phase != "live" or not map_name:
             return
         if not gsi.get("allplayers"):
             return
 
         with self._lock:
-            if round_num != self._round:
+            # Detect round boundary: freezetime → live transition OR round_num change
+            new_round = False
+            if round_phase == "live" and self._prev_round_phase == "freezetime":
+                new_round = True
+            elif round_num != self._round:
+                new_round = True
+            self._prev_round_phase = round_phase
+
+            if new_round:
                 self._window.clear()
                 self._step  = 0
                 self._round = round_num
+                self._frozen = False
+                self.prediction = {"A": 0.5, "B": 0.5}
+
+            # Only feed data during round.phase == "live"
+            if round_phase != "live":
+                return
+
+            # Freeze after bomb plant or round over
+            if bomb_state == "planted" or round_phase == "over":
+                if not self._frozen:
+                    self._frozen = True
+                    logger.info("Prediction frozen (bomb=%s phase=%s)", bomb_state, round_phase)
+                return
+            if self._frozen:
+                return
 
             self.map_name  = map_name
             self.round_num = round_num
@@ -90,6 +121,7 @@ class _GameState:
                 "ct_score": self.ct_score,
                 "t_score":  self.t_score,
                 "steps":    len(self._window),
+                "frozen":   self._frozen,
             }
 
 
@@ -99,6 +131,7 @@ def create_app(checkpoint: Path, device: str = "cpu") -> Flask:
     app       = Flask(__name__, static_folder=str(_DASHBOARD))
 
     @app.post("/gsi")
+    @app.post("/")
     def recv_gsi():
         data = request.get_json(silent=True, force=True)
         if data:

@@ -9,10 +9,10 @@ from typing import Final, Optional
 # the A (upper) and B (lower) sites share the same X/Y footprint.
 _ZONE_BOXES: Final[dict[str, dict[str, tuple[float, float, float, float]]]] = {
     "de_mirage": {
-        # A site: palace / ramp / jungle area, upper-left
-        "A":   (-2603.0, -1200.0, -200.0,  882.0),
-        # B site: van / apps / tunnel area, lower-center
-        "B":   ( -900.0,   200.0, -2603.0, -1400.0),
+        # A site: van / apps / tunnel area, lower-center
+        "A":   ( -900.0,   200.0, -2603.0, -1400.0),
+        # B site: palace / ramp / jungle area, upper-left
+        "B":   (-2603.0, -1200.0, -200.0,  882.0),
         # mid: connector / catwalk / short
         "mid": (-1200.0,   400.0, -1400.0,  -200.0),
     },
@@ -49,10 +49,10 @@ _ZONE_BOXES: Final[dict[str, dict[str, tuple[float, float, float, float]]]] = {
         "mid": (-1800.0,  -600.0,  200.0,  900.0),
     },
     "de_anubis": {
-        # A site: upper right
-        "A":   ( 800.0, 1804.0, 1400.0, 2945.0),
-        # B site: lower left / canal
-        "B":   (-1954.0, -600.0, -400.0,  900.0),
+        # A site: lower left / canal
+        "A":   (-1954.0, -600.0, -400.0,  900.0),
+        # B site: upper right
+        "B":   ( 800.0, 1804.0, 1400.0, 2945.0),
         # mid: bridge / mid connector
         "mid": ( -600.0,  800.0,  300.0, 1400.0),
     },

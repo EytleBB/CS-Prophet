@@ -5,7 +5,12 @@ import random
 import time
 from typing import Any
 
+import functools
+
 from curl_cffi import requests as cffi_requests
+
+# Force unbuffered print in non-TTY mode
+print = functools.partial(print, flush=True)  # type: ignore[assignment]
 
 
 class HLTVScraper:
@@ -22,11 +27,18 @@ class HLTVScraper:
 
     BASE = "https://www.hltv.org"
 
-    def __init__(self, rate_limit_cfg: dict[str, Any]) -> None:
+    def __init__(self, rate_limit_cfg: dict[str, Any], proxy: str | None = None) -> None:
         self._min_delay = rate_limit_cfg.get("min_delay", 2)
         self._max_delay = rate_limit_cfg.get("max_delay", 5)
         self._max_retries = rate_limit_cfg.get("max_retries", 3)
-        self._session = cffi_requests.Session(impersonate="chrome120")
+        # Proxy priority: explicit arg > env var
+        self._proxy = proxy or os.environ.get("HTTPS_PROXY") or os.environ.get("HTTP_PROXY") or os.environ.get("ALL_PROXY")
+        if self._proxy:
+            print(f"[proxy] using {self._proxy}")
+        self._session = cffi_requests.Session(
+            impersonate="chrome120",
+            proxies={"http": self._proxy, "https": self._proxy} if self._proxy else None,
+        )
 
     def _sleep(self) -> None:
         time.sleep(random.uniform(self._min_delay, self._max_delay))
@@ -45,7 +57,7 @@ class HLTVScraper:
             resp = self._session.get(url, headers=headers, timeout=30)
             if resp.status_code == 200:
                 return resp.text
-            if resp.status_code in (429, 503):
+            if resp.status_code in (403, 429, 503):
                 wait = 2 ** (attempt + 2)
                 print(f"  [{resp.status_code}] backing off {wait}s (attempt {attempt+1})")
                 time.sleep(wait)

@@ -6,7 +6,6 @@ import subprocess
 
 
 _BZ_CANDIDATES = [
-    r"D:\EDGE\APP\Bandizip\bz.exe",
     r"C:\Program Files\Bandizip\bz.exe",
     r"C:\Program Files (x86)\Bandizip\bz.exe",
 ]

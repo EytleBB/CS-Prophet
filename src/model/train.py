@@ -5,6 +5,7 @@ from __future__ import annotations
 import argparse
 import logging
 import math
+import sys
 from pathlib import Path
 from typing import Optional
 
@@ -13,6 +14,10 @@ import torch.nn as nn
 import torch.nn.functional as F
 from omegaconf import OmegaConf
 from torch.utils.data import DataLoader
+
+if __package__ in {None, ""}:
+    # Allow `python src/model/train.py` by exposing the repo root as an import base.
+    sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 
 from src.features.dataset import RoundSequenceDataset, split_files
 from src.model.transformer import BombSiteTransformer

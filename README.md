@@ -30,7 +30,7 @@ pip install -r requirements.txt
 python -m src.parser.demo_parser --input data/raw/ --output data/processed/
 
 # Train
-python train.py --config configs/train_config.yaml
+python -m src.model.train --config configs/train_config.yaml
 
 # Run tests
 pytest tests/
