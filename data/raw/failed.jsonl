@@ -85,3 +85,92 @@
 {"match_id": "2389280", "reason": "match page: Failed to fetch https://www.hltv.org/matches/2389280/parivision-vs-furia-blast-bounty-2026-season-1-finals after 3 retries"}
 {"match_id": "2389279", "reason": "match page: Failed to perform, curl: (35) Connection closed abruptly. See https://curl.se/libcurl/c/libcurl-errors.html first for more details."}
 {"match_id": "2389278", "reason": "match page: Failed to perform, curl: (35) TLS connect error: error:00000000:invalid library (0):OPENSSL_internal:invalid library (0). See https://curl.se/libcurl/c/libcurl-errors.html first for more details."}
+{"match_id": "2389987", "reason": "download/extract: Failed to perform, curl: (56) Connection closed abruptly. See https://curl.se/libcurl/c/libcurl-errors.html first for more details."}
+{"match_id": "2389987", "reason": "match page: Failed to fetch https://www.hltv.org/matches/2389987/parivision-vs-vitality-pgl-cluj-napoca-2026 after 3 retries"}
+{"match_id": "2389967", "reason": "match page: Failed to fetch https://www.hltv.org/matches/2389967/mouz-vs-vitality-pgl-cluj-napoca-2026 after 3 retries"}
+{"match_id": "2389963", "reason": "download/extract: Failed to perform, curl: (56) Connection closed abruptly. See https://curl.se/libcurl/c/libcurl-errors.html first for more details."}
+{"match_id": "2389987", "reason": "download/extract: Failed to perform, curl: (56) Connection closed abruptly. See https://curl.se/libcurl/c/libcurl-errors.html first for more details."}
+{"match_id": "2389967", "reason": "download/extract: Cannot find Bandizip bz.exe"}
+{"match_id": "2389987", "reason": "download/extract: Cannot find Bandizip bz.exe"}
+{"match_id": "2388111", "reason": "download/extract: HTTP Error 403: Forbidden"}
+{"match_id": "2388112", "reason": "download/extract: HTTP Error 403: Forbidden"}
+{"match_id": "2388109", "reason": "download/extract: HTTP Error 403: Forbidden"}
+{"match_id": "2388107", "reason": "download/extract: HTTP Error 403: Forbidden"}
+{"match_id": "2388108", "reason": "download/extract: Failed to perform, curl: (56) Connection closed abruptly. See https://curl.se/libcurl/c/libcurl-errors.html first for more details."}
+{"match_id": "2388111", "reason": "download/extract: Failed to perform, curl: (56) Connection closed abruptly. See https://curl.se/libcurl/c/libcurl-errors.html first for more details."}
+{"match_id": "2388112", "reason": "download/extract: HTTP Error 403: Forbidden"}
+{"match_id": "2388105", "reason": "download/extract: HTTP Error 403: Forbidden"}
+{"match_id": "2388109", "reason": "download/extract: HTTP Error 403: Forbidden"}
+{"match_id": "2388106", "reason": "download/extract: HTTP Error 403: Forbidden"}
+{"match_id": "2388110", "reason": "download/extract: HTTP Error 403: Forbidden"}
+{"match_id": "2388104", "reason": "download/extract: HTTP Error 403: Forbidden"}
+{"match_id": "2388107", "reason": "download/extract: HTTP Error 403: Forbidden"}
+{"match_id": "2388103", "reason": "download/extract: HTTP Error 403: Forbidden"}
+{"match_id": "2388108", "reason": "download/extract: HTTP Error 403: Forbidden"}
+{"match_id": "2388102", "reason": "download/extract: HTTP Error 403: Forbidden"}
+{"match_id": "2388106", "reason": "match page: Failed to perform, curl: (28) Failed to connect to www.hltv.org port 443 after 21047 ms: Could not connect to server. See https://curl.se/libcurl/c/libcurl-errors.html first for more details."}
+{"match_id": "2388100", "reason": "download/extract: Failed to perform, curl: (56) Connection closed abruptly. See https://curl.se/libcurl/c/libcurl-errors.html first for more details."}
+{"match_id": "2388099", "reason": "match page: Failed to perform, curl: (35) Connection closed abruptly. See https://curl.se/libcurl/c/libcurl-errors.html first for more details."}
+{"match_id": "2388103", "reason": "match page: Failed to perform, curl: (35) Connection closed abruptly. See https://curl.se/libcurl/c/libcurl-errors.html first for more details."}
+{"match_id": "2388098", "reason": "match page: Failed to perform, curl: (35) TLS connect error: error:00000000:invalid library (0):OPENSSL_internal:invalid library (0). See https://curl.se/libcurl/c/libcurl-errors.html first for more details."}
+{"match_id": "2388102", "reason": "match page: Failed to perform, curl: (35) TLS connect error: error:00000000:invalid library (0):OPENSSL_internal:invalid library (0). See https://curl.se/libcurl/c/libcurl-errors.html first for more details."}
+{"match_id": "2388097", "reason": "match page: Failed to perform, curl: (35) TLS connect error: error:00000000:invalid library (0):OPENSSL_internal:invalid library (0). See https://curl.se/libcurl/c/libcurl-errors.html first for more details."}
+{"match_id": "2388101", "reason": "match page: Failed to perform, curl: (35) TLS connect error: error:00000000:invalid library (0):OPENSSL_internal:invalid library (0). See https://curl.se/libcurl/c/libcurl-errors.html first for more details."}
+{"match_id": "2388100", "reason": "match page: Failed to perform, curl: (35) TLS connect error: error:00000000:invalid library (0):OPENSSL_internal:invalid library (0). See https://curl.se/libcurl/c/libcurl-errors.html first for more details."}
+{"match_id": "2388095", "reason": "match page: Failed to perform, curl: (35) TLS connect error: error:00000000:invalid library (0):OPENSSL_internal:invalid library (0). See https://curl.se/libcurl/c/libcurl-errors.html first for more details."}
+{"match_id": "2388096", "reason": "match page: Failed to perform, curl: (35) TLS connect error: error:00000000:invalid library (0):OPENSSL_internal:invalid library (0). See https://curl.se/libcurl/c/libcurl-errors.html first for more details."}
+{"match_id": "2388099", "reason": "match page: Failed to perform, curl: (35) TLS connect error: error:00000000:invalid library (0):OPENSSL_internal:invalid library (0). See https://curl.se/libcurl/c/libcurl-errors.html first for more details."}
+{"match_id": "2388093", "reason": "match page: Failed to perform, curl: (35) TLS connect error: error:00000000:invalid library (0):OPENSSL_internal:invalid library (0). See https://curl.se/libcurl/c/libcurl-errors.html first for more details."}
+{"match_id": "2388098", "reason": "match page: Failed to perform, curl: (35) TLS connect error: error:00000000:invalid library (0):OPENSSL_internal:invalid library (0). See https://curl.se/libcurl/c/libcurl-errors.html first for more details."}
+{"match_id": "2388094", "reason": "match page: Failed to perform, curl: (35) TLS connect error: error:00000000:invalid library (0):OPENSSL_internal:invalid library (0). See https://curl.se/libcurl/c/libcurl-errors.html first for more details."}
+{"match_id": "2388097", "reason": "match page: Failed to perform, curl: (35) TLS connect error: error:00000000:invalid library (0):OPENSSL_internal:invalid library (0). See https://curl.se/libcurl/c/libcurl-errors.html first for more details."}
+{"match_id": "2388092", "reason": "match page: Failed to perform, curl: (35) TLS connect error: error:00000000:invalid library (0):OPENSSL_internal:invalid library (0). See https://curl.se/libcurl/c/libcurl-errors.html first for more details."}
+{"match_id": "2388095", "reason": "match page: Failed to perform, curl: (35) TLS connect error: error:00000000:invalid library (0):OPENSSL_internal:invalid library (0). See https://curl.se/libcurl/c/libcurl-errors.html first for more details."}
+{"match_id": "2388091", "reason": "match page: Failed to perform, curl: (35) TLS connect error: error:00000000:invalid library (0):OPENSSL_internal:invalid library (0). See https://curl.se/libcurl/c/libcurl-errors.html first for more details."}
+{"match_id": "2388096", "reason": "match page: Failed to perform, curl: (35) TLS connect error: error:00000000:invalid library (0):OPENSSL_internal:invalid library (0). See https://curl.se/libcurl/c/libcurl-errors.html first for more details."}
+{"match_id": "2388090", "reason": "match page: Failed to perform, curl: (35) TLS connect error: error:00000000:invalid library (0):OPENSSL_internal:invalid library (0). See https://curl.se/libcurl/c/libcurl-errors.html first for more details."}
+{"match_id": "2388093", "reason": "match page: Failed to perform, curl: (35) TLS connect error: error:00000000:invalid library (0):OPENSSL_internal:invalid library (0). See https://curl.se/libcurl/c/libcurl-errors.html first for more details."}
+{"match_id": "2388094", "reason": "match page: Failed to perform, curl: (35) TLS connect error: error:00000000:invalid library (0):OPENSSL_internal:invalid library (0). See https://curl.se/libcurl/c/libcurl-errors.html first for more details."}
+{"match_id": "2388089", "reason": "match page: Failed to perform, curl: (35) TLS connect error: error:00000000:invalid library (0):OPENSSL_internal:invalid library (0). See https://curl.se/libcurl/c/libcurl-errors.html first for more details."}
+{"match_id": "2388092", "reason": "match page: Failed to perform, curl: (35) TLS connect error: error:00000000:invalid library (0):OPENSSL_internal:invalid library (0). See https://curl.se/libcurl/c/libcurl-errors.html first for more details."}
+{"match_id": "2388088", "reason": "match page: Failed to perform, curl: (35) TLS connect error: error:00000000:invalid library (0):OPENSSL_internal:invalid library (0). See https://curl.se/libcurl/c/libcurl-errors.html first for more details."}
+{"match_id": "2388091", "reason": "match page: Failed to perform, curl: (35) TLS connect error: error:00000000:invalid library (0):OPENSSL_internal:invalid library (0). See https://curl.se/libcurl/c/libcurl-errors.html first for more details."}
+{"match_id": "2388086", "reason": "match page: Failed to perform, curl: (35) TLS connect error: error:00000000:invalid library (0):OPENSSL_internal:invalid library (0). See https://curl.se/libcurl/c/libcurl-errors.html first for more details."}
+{"match_id": "2388090", "reason": "match page: Failed to perform, curl: (35) TLS connect error: error:00000000:invalid library (0):OPENSSL_internal:invalid library (0). See https://curl.se/libcurl/c/libcurl-errors.html first for more details."}
+{"match_id": "2388089", "reason": "match page: Failed to perform, curl: (28) Failed to connect to www.hltv.org port 443 after 21034 ms: Could not connect to server. See https://curl.se/libcurl/c/libcurl-errors.html first for more details."}
+{"match_id": "2388087", "reason": "download/extract: Failed to perform, curl: (56) Connection closed abruptly. See https://curl.se/libcurl/c/libcurl-errors.html first for more details."}
+{"match_id": "2388084", "reason": "download/extract: Failed to perform, curl: (56) Connection closed abruptly. See https://curl.se/libcurl/c/libcurl-errors.html first for more details."}
+{"match_id": "2388111", "reason": "download/extract: Failed to perform, curl: (56) Connection closed abruptly. See https://curl.se/libcurl/c/libcurl-errors.html first for more details."}
+{"match_id": "2388085", "reason": "download/extract: Failed to perform, curl: (56) Connection closed abruptly. See https://curl.se/libcurl/c/libcurl-errors.html first for more details."}
+{"match_id": "2388112", "reason": "match page: Failed to perform, curl: (28) Failed to connect to www.hltv.org port 443 after 21040 ms: Could not connect to server. See https://curl.se/libcurl/c/libcurl-errors.html first for more details."}
+{"match_id": "2388082", "reason": "download/extract: Failed to perform, curl: (56) Connection closed abruptly. See https://curl.se/libcurl/c/libcurl-errors.html first for more details."}
+{"match_id": "2388083", "reason": "match page: Failed to perform, curl: (28) Failed to connect to www.hltv.org port 443 after 21069 ms: Could not connect to server. See https://curl.se/libcurl/c/libcurl-errors.html first for more details."}
+{"match_id": "2388080", "reason": "download/extract: HTTP Error 403: Forbidden"}
+{"match_id": "2388108", "reason": "download/extract: Failed to perform, curl: (56) Connection closed abruptly. See https://curl.se/libcurl/c/libcurl-errors.html first for more details."}
+{"match_id": "2388079", "reason": "download/extract: Failed to perform, curl: (56) Connection closed abruptly. See https://curl.se/libcurl/c/libcurl-errors.html first for more details."}
+{"match_id": "2388078", "reason": "download/extract: Failed to perform, curl: (56) Connection closed abruptly. See https://curl.se/libcurl/c/libcurl-errors.html first for more details."}
+{"match_id": "2388060", "reason": "match page: Failed to perform, curl: (28) Failed to connect to www.hltv.org port 443 after 21024 ms: Could not connect to server. See https://curl.se/libcurl/c/libcurl-errors.html first for more details."}
+{"match_id": "2388059", "reason": "match page: Failed to perform, curl: (28) Failed to connect to www.hltv.org port 443 after 21029 ms: Could not connect to server. See https://curl.se/libcurl/c/libcurl-errors.html first for more details."}
+{"match_id": "2388056", "reason": "match page: Failed to perform, curl: (28) Failed to connect to www.hltv.org port 443 after 21042 ms: Could not connect to server. See https://curl.se/libcurl/c/libcurl-errors.html first for more details."}
+{"match_id": "2388047", "reason": "match page: Failed to perform, curl: (28) Failed to connect to www.hltv.org port 443 after 21034 ms: Could not connect to server. See https://curl.se/libcurl/c/libcurl-errors.html first for more details."}
+{"match_id": "2388033", "reason": "match page: Failed to perform, curl: (28) Failed to connect to www.hltv.org port 443 after 21055 ms: Could not connect to server. See https://curl.se/libcurl/c/libcurl-errors.html first for more details."}
+{"match_id": "2388045", "reason": "match page: Failed to perform, curl: (28) Failed to connect to www.hltv.org port 443 after 21030 ms: Could not connect to server. See https://curl.se/libcurl/c/libcurl-errors.html first for more details."}
+{"match_id": "2388039", "reason": "download/extract: Failed to download demo after 3 retries"}
+{"match_id": "2387404", "reason": "match page: Failed to perform, curl: (28) Failed to connect to www.hltv.org port 443 after 21035 ms: Could not connect to server. See https://curl.se/libcurl/c/libcurl-errors.html first for more details."}
+{"match_id": "2387403", "reason": "match page: Failed to perform, curl: (28) Failed to connect to www.hltv.org port 443 after 21025 ms: Could not connect to server. See https://curl.se/libcurl/c/libcurl-errors.html first for more details."}
+{"match_id": "2387402", "reason": "match page: Failed to perform, curl: (28) Failed to connect to www.hltv.org port 443 after 21058 ms: Could not connect to server. See https://curl.se/libcurl/c/libcurl-errors.html first for more details."}
+{"match_id": "2387851", "reason": "download/extract: Failed to download demo after 3 retries"}
+{"match_id": "2387855", "reason": "download/extract: Failed to download demo after 3 retries"}
+{"match_id": "2387397", "reason": "match page: Failed to perform, curl: (28) Failed to connect to www.hltv.org port 443 after 21034 ms: Could not connect to server. See https://curl.se/libcurl/c/libcurl-errors.html first for more details."}
+{"match_id": "2387352", "reason": "download/extract: Failed to perform, curl: (56) Connection closed abruptly. See https://curl.se/libcurl/c/libcurl-errors.html first for more details."}
+{"match_id": "2387394", "reason": "match page: Failed to perform, curl: (35) TLS connect error: error:00000000:invalid library (0):OPENSSL_internal:invalid library (0). See https://curl.se/libcurl/c/libcurl-errors.html first for more details."}
+{"match_id": "2387393", "reason": "match page: Failed to perform, curl: (35) TLS connect error: error:00000000:invalid library (0):OPENSSL_internal:invalid library (0). See https://curl.se/libcurl/c/libcurl-errors.html first for more details."}
+{"match_id": "2387380", "reason": "match page: Failed to perform, curl: (35) TLS connect error: error:00000000:invalid library (0):OPENSSL_internal:invalid library (0). See https://curl.se/libcurl/c/libcurl-errors.html first for more details."}
+{"match_id": "2387379", "reason": "match page: Failed to perform, curl: (35) TLS connect error: error:00000000:invalid library (0):OPENSSL_internal:invalid library (0). See https://curl.se/libcurl/c/libcurl-errors.html first for more details."}
+{"match_id": "2387384", "reason": "match page: Failed to perform, curl: (35) TLS connect error: error:00000000:invalid library (0):OPENSSL_internal:invalid library (0). See https://curl.se/libcurl/c/libcurl-errors.html first for more details."}
+{"match_id": "2387378", "reason": "match page: Failed to perform, curl: (35) TLS connect error: error:00000000:invalid library (0):OPENSSL_internal:invalid library (0). See https://curl.se/libcurl/c/libcurl-errors.html first for more details."}
+{"match_id": "2387383", "reason": "match page: Failed to perform, curl: (35) TLS connect error: error:00000000:invalid library (0):OPENSSL_internal:invalid library (0). See https://curl.se/libcurl/c/libcurl-errors.html first for more details."}
+{"match_id": "2387382", "reason": "match page: Failed to perform, curl: (35) TLS connect error: error:00000000:invalid library (0):OPENSSL_internal:invalid library (0). See https://curl.se/libcurl/c/libcurl-errors.html first for more details."}
+{"match_id": "2387381", "reason": "match page: Failed to perform, curl: (35) TLS connect error: error:00000000:invalid library (0):OPENSSL_internal:invalid library (0). See https://curl.se/libcurl/c/libcurl-errors.html first for more details."}
+{"match_id": "2387377", "reason": "match page: Failed to perform, curl: (35) TLS connect error: error:00000000:invalid library (0):OPENSSL_internal:invalid library (0). See https://curl.se/libcurl/c/libcurl-errors.html first for more details."}
+{"match_id": "2387352", "reason": "match page: Failed to perform, curl: (35) TLS connect error: error:00000000:invalid library (0):OPENSSL_internal:invalid library (0). See https://curl.se/libcurl/c/libcurl-errors.html first for more details."}

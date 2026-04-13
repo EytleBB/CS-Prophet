@@ -116,3 +116,52 @@ def build_state_vector(row: pd.Series) -> np.ndarray:
     vec[_GLOBAL_BASE + 4] = min(1.0, float(d.get("t_losing_streak", 0)) / _STREAK_MAX)
 
     return vec
+
+
+def build_state_matrix(df: pd.DataFrame) -> np.ndarray:
+    """Vectorised: convert a sorted round DataFrame to (n_rows, FEATURE_DIM) float32."""
+    n = len(df)
+    mat = np.zeros((n, FEATURE_DIM), dtype=np.float32)
+
+    def _col(name: str, default: float = 0.0) -> np.ndarray:
+        if name in df.columns:
+            return pd.to_numeric(df[name], errors="coerce").fillna(default).values.astype(np.float32)
+        return np.full(n, default, dtype=np.float32)
+
+    for side, base in (("t", 0), ("ct", _CT_BASE)):
+        for i in range(5):
+            pb = base + i * _PLAYER_STRIDE
+            for j, field in enumerate(PLAYER_FIELDS):
+                vals = _col(f"{side}{i}_{field}")
+                if field in NORMALISE:
+                    vals = vals / 100.0
+                mat[:, pb + j] = vals
+
+            role_col = f"{side}{i}_role"
+            if role_col in df.columns:
+                for role, ridx in ROLE_IDX.items():
+                    mat[:, pb + 7 + ridx] = (df[role_col].values == role).astype(np.float32)
+
+            wep_col = f"{side}{i}_weapon"
+            if wep_col in df.columns:
+                wvals = df[wep_col].values
+                for cat, cidx in WEAPON_CAT_IDX.items():
+                    mat[:, pb + 12 + cidx] = (wvals == cat).astype(np.float32)
+                known = np.isin(wvals, list(WEAPON_CAT_IDX.keys()))
+                mat[:, pb + 12 + 6] = np.where(known, mat[:, pb + 12 + 6], 1.0)
+
+            for k, flag in enumerate(("has_smoke", "has_flash", "has_he", "has_molotov")):
+                mat[:, pb + 19 + k] = _col(f"{side}{i}_{flag}")
+
+            mat[:, pb + 23] = np.clip(_col(f"{side}{i}_flash_duration") / _FLASH_MAX, 0, 1)
+            mat[:, pb + 24] = np.clip(_col(f"{side}{i}_equip_value") / _EQUIP_MAX, 0, 1)
+            mat[:, pb + 25] = _col(f"{side}{i}_is_scoped")
+            mat[:, pb + 26] = _col(f"{side}{i}_is_defusing")
+
+    mat[:, _GLOBAL_BASE + 0] = np.clip(_col("ct_score") / _SCORE_MAX, 0, 1)
+    mat[:, _GLOBAL_BASE + 1] = np.clip(_col("t_score") / _SCORE_MAX, 0, 1)
+    mat[:, _GLOBAL_BASE + 2] = np.clip(_col("round_num") / _SCORE_MAX, 0, 1)
+    mat[:, _GLOBAL_BASE + 3] = np.clip(_col("ct_losing_streak") / _STREAK_MAX, 0, 1)
+    mat[:, _GLOBAL_BASE + 4] = np.clip(_col("t_losing_streak") / _STREAK_MAX, 0, 1)
+
+    return mat

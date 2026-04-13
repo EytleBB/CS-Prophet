@@ -2,20 +2,25 @@ from __future__ import annotations
 
 import glob
 import os
+import shutil
 import subprocess
 
 
 _BZ_CANDIDATES = [
     r"C:\Program Files\Bandizip\bz.exe",
     r"C:\Program Files (x86)\Bandizip\bz.exe",
+    r"D:\EDGE\APP\Bandizip\bz.exe",
 ]
 
 
 def _find_bz() -> str:
-    bz = next((p for p in _BZ_CANDIDATES if os.path.isfile(p)), None)
-    if bz is None:
-        raise RuntimeError("Cannot find Bandizip bz.exe")
-    return bz
+    for p in _BZ_CANDIDATES:
+        if os.path.isfile(p):
+            return p
+    from_path = shutil.which("bz") or shutil.which("bz.exe")
+    if from_path:
+        return from_path
+    raise RuntimeError("Cannot find Bandizip bz.exe")
 
 
 def extract_archive(archive_path: str, dest_dir: str) -> list[str]:

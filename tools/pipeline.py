@@ -109,14 +109,23 @@ def run(cfg: dict, dry_run: bool = False) -> None:
     print()
 
     offset = 0
+    consecutive_page_errors = 0
     while new_downloads < target:
         url = build_results_url(offset)
         print(f"Fetching results page offset={offset} ...")
         try:
             html = scraper.get(url)
         except Exception as e:
-            print(f"  [error] results page failed: {e}")
-            break
+            consecutive_page_errors += 1
+            wait = min(60, 2 ** (consecutive_page_errors + 2))
+            print(f"  [error] results page failed ({consecutive_page_errors}): {e}")
+            if consecutive_page_errors >= 8:
+                print(f"  Giving up after {consecutive_page_errors} consecutive results-page failures.")
+                break
+            print(f"  Waiting {wait}s then retrying same offset ...")
+            time.sleep(wait)
+            continue
+        consecutive_page_errors = 0
 
         matches = parse_results_page(html)
         if not matches:
@@ -166,11 +175,13 @@ def run(cfg: dict, dry_run: bool = False) -> None:
                     scraper.download_file(demo_url, archive_path, referer=match_url)
                     dem_paths = extract_archive(archive_path, tmp)
                 except Exception as e:
+                    print(f"    [fail] download/extract: {e}")
                     log_failure(out_cfg["failed_log"], match_id, f"download/extract: {e}")
                     failed_count += 1
                     continue
 
                 if not dem_paths:
+                    print(f"    [fail] no .dem files in archive")
                     log_failure(out_cfg["failed_log"], match_id, "no .dem files in archive")
                     failed_count += 1
                     continue

@@ -13,8 +13,9 @@ from src.model.transformer import BombSiteTransformer
 class RoundPredictor:
     """Load a trained BombSiteTransformer checkpoint and predict bomb plant site probabilities."""
 
-    def __init__(self, checkpoint_path: str | Path, device: str = "cpu") -> None:
+    def __init__(self, checkpoint_path: str | Path, device: str = "cpu", temperature: float = 0.5) -> None:
         self.device = torch.device(device)
+        self.temperature = temperature
         checkpoint = torch.load(checkpoint_path, map_location=self.device)
         model_config = checkpoint["model_config"]
         self.model = BombSiteTransformer(**model_config).to(self.device)
@@ -34,5 +35,5 @@ class RoundPredictor:
         src_key_padding_mask = (x.abs().sum(dim=-1) == 0)
         with torch.no_grad():
             logits = self.model(x, src_key_padding_mask=src_key_padding_mask)
-            probs = torch.softmax(logits, dim=-1).squeeze().tolist()
+            probs = torch.softmax(logits / self.temperature, dim=-1).squeeze().tolist()
         return {"A": probs[0], "B": probs[1]}

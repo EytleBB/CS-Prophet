@@ -136,8 +136,8 @@ def train(config_path: str = "configs/train_config.yaml") -> None:
         seed=cfg.training.seed,
     )
 
-    train_ds = RoundSequenceDataset(train_files, cfg.data.sequence_length)
-    val_ds = RoundSequenceDataset(val_files, cfg.data.sequence_length)
+    train_ds = RoundSequenceDataset(train_files, cfg.data.sequence_length, training=True)
+    val_ds = RoundSequenceDataset(val_files, cfg.data.sequence_length, training=False)
     train_loader = DataLoader(train_ds, batch_size=cfg.training.batch_size, shuffle=True)
     val_loader = DataLoader(val_ds, batch_size=cfg.training.batch_size, shuffle=False)
     train_counts = _label_counts(train_ds)
