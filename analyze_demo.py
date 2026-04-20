@@ -2,9 +2,9 @@
 """Offline demo analyzer — replay a parsed parquet and output bomb-site predictions every 10 s.
 
 Usage:
-    python analyze_demo.py data/processed/some_demo.parquet
-    python analyze_demo.py data/processed/some_demo.parquet --rounds 1 3 5
-    python analyze_demo.py data/processed/some_demo.parquet --checkpoint checkpoints/best.pt
+    python analyze_demo.py processed/some_demo.parquet
+    python analyze_demo.py processed/some_demo.parquet --rounds 1 3 5
+    python analyze_demo.py processed/some_demo.parquet --checkpoint checkpoints/best.pt
 """
 
 from __future__ import annotations
@@ -17,6 +17,7 @@ import pandas as pd
 
 from src.features.state_vector import FEATURE_DIM, build_state_vector
 from src.inference.predictor import RoundPredictor
+from src.utils.paths import resolve_path_input
 
 _TARGET_RATE = 8    # ticks/sec (after downsampling)
 _MAX_STEPS   = 720  # 90 s × 8
@@ -87,7 +88,7 @@ def main() -> None:
     args = parser.parse_args()
 
     analyze(
-        Path(args.parquet),
+        resolve_path_input(args.parquet),
         Path(args.checkpoint),
         device=args.device,
         rounds=args.rounds,

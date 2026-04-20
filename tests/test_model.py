@@ -44,7 +44,7 @@ class TestBombSiteTransformer:
 
     def test_gradients_flow(self):
         model = self._model()
-        x = torch.randn(2, 30, 279, requires_grad=False)
+        x = torch.randn(2, 30, 275, requires_grad=False)
         out = model(x)
         loss = out.sum()
         loss.backward()
@@ -64,4 +64,10 @@ class TestBombSiteTransformer:
         x = torch.randn(2, 30, 275)
         mask = torch.zeros(2, 30, dtype=torch.bool)  # all False = no masking
         out = model(x, src_key_padding_mask=mask)
+        assert out.shape == (2, 3)
+
+    def test_output_shape_v2_schema(self):
+        model = self._model(input_dim=218)
+        x = torch.randn(2, 16, 218)
+        out = model(x)
         assert out.shape == (2, 3)

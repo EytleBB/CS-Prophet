@@ -20,9 +20,9 @@ training:
   focal_loss_gamma: 2.0
 
 data:
-  raw_dir: data/raw/demos
-  processed_dir: data/processed
-  splits_dir: data/splits
+  raw_dir: raw/demos
+  processed_dir: processed
+  splits_dir: splits
   sequence_length: 720
   tick_rate: 64
   target_tick_rate: 8

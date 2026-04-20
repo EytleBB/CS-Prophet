@@ -1,19 +1,24 @@
-"""Real-time inference module — loads a trained model and scores live round state."""
+"""Real-time inference helper that loads a trained model and scores sequences."""
 
 from __future__ import annotations
 
 from pathlib import Path
 
-import torch
 import numpy as np
+import torch
 
 from src.model.transformer import BombSiteTransformer
 
 
 class RoundPredictor:
-    """Load a trained BombSiteTransformer checkpoint and predict bomb plant site probabilities."""
+    """Load a trained BombSiteTransformer checkpoint and predict A/B probabilities."""
 
-    def __init__(self, checkpoint_path: str | Path, device: str = "cpu", temperature: float = 0.5) -> None:
+    def __init__(
+        self,
+        checkpoint_path: str | Path,
+        device: str = "cpu",
+        temperature: float = 0.5,
+    ) -> None:
         self.device = torch.device(device)
         self.temperature = temperature
         checkpoint = torch.load(checkpoint_path, map_location=self.device)
@@ -23,13 +28,13 @@ class RoundPredictor:
         self.model.eval()
 
     def predict(self, features: np.ndarray) -> dict[str, float]:
-        """Return bomb plant site probabilities.
+        """Return bomb-site probabilities for one round sequence.
 
         Args:
-            features: float32 array of shape (seq_len, 275) — one round's state sequence.
+            features: Float32 array of shape ``(seq_len, input_dim)``.
 
         Returns:
-            dict with keys 'A', 'B' — probabilities summing to 1.0.
+            ``{"A": p_a, "B": p_b}`` where probabilities sum to 1.
         """
         x = torch.tensor(features, dtype=torch.float32, device=self.device).unsqueeze(0)
         src_key_padding_mask = (x.abs().sum(dim=-1) == 0)

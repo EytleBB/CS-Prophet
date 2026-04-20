@@ -20,6 +20,7 @@ if hasattr(sys.stderr, "reconfigure"):
     sys.stderr.reconfigure(encoding="utf-8", errors="replace")
 
 import functools
+from pathlib import Path
 
 import yaml
 
@@ -40,17 +41,17 @@ from tools.hltv.parser import (
 )
 from tools.hltv.scraper import HLTVScraper
 from tools.hltv.downloader import extract_archive
+from src.utils.paths import resolve_path_input
 
 
 def load_config(path: str) -> dict:
     path = os.path.abspath(path)
-    cfg_dir = os.path.dirname(path)
     with open(path, encoding="utf-8") as f:
         cfg = yaml.safe_load(f)
     out = cfg.setdefault("output", {})
     for key in ("demos_dir", "manifest", "failed_log"):
-        if key in out and not os.path.isabs(out[key]):
-            out[key] = os.path.normpath(os.path.join(cfg_dir, out[key]))
+        if key in out:
+            out[key] = str(resolve_path_input(out[key]))
     return cfg
 
 
@@ -68,7 +69,7 @@ def _event_allowed(event_name: str, allowed_events: list[str]) -> bool:
 def run(cfg: dict, dry_run: bool = False) -> None:
     rate_cfg = cfg["rate_limit"]
     out_cfg = cfg["output"]
-    os.makedirs(out_cfg["demos_dir"], exist_ok=True)
+    Path(out_cfg["demos_dir"]).mkdir(parents=True, exist_ok=True)
 
     scraper = HLTVScraper(rate_cfg, proxy=cfg.get("proxy"))
     seen = load_seen_match_ids(out_cfg["manifest"])

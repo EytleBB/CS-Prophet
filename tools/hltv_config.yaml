@@ -8,29 +8,37 @@ cutoff_days: 400
 
 # Leave empty to download from all events (no filter)
 allowed_events:
-#  - "BLAST Open Rotterdam 2026"
-  - "ESL Pro League Season 23"
-  - "PGL Cluj-Napoca 2026"
+  - "BLAST Bounty 2026 Season 1 Finals"
   - "IEM Kraków 2026"
-  - "BLAST Bounty 2026 Season 1"
-  - "StarLadder Budapest Major 2025"
-  - "IEM Chengdu 2025"
-  - "PGL Masters Bucharest 2025"
-  - "Thunderpick World Championship 2025"
-  - "CS Asia Championships 2025"
-  - "ESL Pro League Season 22 Finals"
-  - "FISSURE Playground 2"
-  - "Esports World Cup 2025"
-  - "IEM Cologne 2025"
-  - "FISSURE Playground 1"
-  - "BLAST.tv Austin Major 2025"
-  - "IEM Dallas 2025"
-  - "PGL Astana 2025"
-  - "IEM Melbourne 2025"
-  - "PGL Bucharest 2025"
-  - "ESL Pro League Season 21 Finals"
-  - "PGL Cluj-Napoca 2025"
-  - "IEM Katowice 2025"
+  - "PGL Cluj-Napoca 2026"
+  - "ESL Pro League Season 23 Finals"
+  - "BLAST Open Rotterdam 2026"
+  - "PGL Bucharest 2026"
+  - "BetBoom RUSH B Summit Season 2"
+  - "BC Game Masters Championship Season 1"
+  - "Stake Ranked Episode 1"
+  - "United21 Esplay Challenge Season 1"
+  - "IEM Kraków 2026 Stage 1"
+  - "Copenhagen Gaming Week Showdown 2026"
+  - "IstanbulAN 2026"
+  - "Roman Imperium Cup V"
+  - "Esplay De_Airport Masters 2026"
+  - "Parken Challenger Championship Season 1"
+  - "Digital Crusade DraculaN Season 5"
+  - "Esplay Backforce Masters 2026"
+  - "Parken Challenger Championship Season 2"
+  - "HyperX Roman Imperium Cup VI"
+  - "Urban Riga Open Season 3"
+  - "ROG JOURNEY Spring 2026"
+  - "Radio Popular Roman Imperium Cup VII"
+  - "Digital Crusade DraculaN Season 6"
+  - "Parken Challenger Championship Season 3"
+  - "Urban Riga Open Season 4"
+  - "HLC Belgrade PRO 2026"
+  - "FiRe CONTER Season 3"
+  - "Parken Challenger Championship Season 4"
+  
+
 
 maps:
   - de_mirage
@@ -49,6 +57,6 @@ rate_limit:
   max_retries: 3
 
 output:
-  demos_dir: ../data/raw/demos
-  manifest: ../data/raw/manifest.jsonl
-  failed_log: ../data/raw/failed.jsonl
+  demos_dir: raw/demos
+  manifest: raw/manifest.jsonl
+  failed_log: raw/failed.jsonl

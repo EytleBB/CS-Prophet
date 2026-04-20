@@ -1,6 +1,8 @@
 import pandas as pd
 from pathlib import Path
 
+from src.utils.paths import data_path
+
 selected = [
     ("mirage",   "2389251_de_mirage",   "2389253_de_mirage"),
     ("inferno",  "2389253_de_inferno",  "2389254_de_inferno"),
@@ -11,7 +13,7 @@ selected = [
     ("anubis",   "2389261_de_anubis",   "2389262_de_anubis"),
 ]
 
-p = Path(__file__).parent / "data" / "processed"
+p = data_path("processed")
 for map_name, s1, s2 in selected:
     for stem in (s1, s2):
         df = pd.read_parquet(p / f"{stem}.parquet")

@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
-"""Batch-parse all .dem files in data/raw/demos/ → data/processed/.
+"""Batch-parse all .dem files in raw/demos/ → processed/.
 
 Usage (from project root):
     python parse_demos.py
-    python parse_demos.py --demo-dir data/raw/demos --out-dir data/processed
+    python parse_demos.py --demo-dir raw/demos --out-dir processed
     python parse_demos.py --workers 4       # parallel with 4 processes
     python parse_demos.py --resume          # skip already-processed demos
 """
@@ -16,6 +16,8 @@ import multiprocessing as mp
 import sys
 import time
 from pathlib import Path
+
+from src.utils.paths import resolve_path_input
 
 # Force UTF-8 on Windows console
 if hasattr(sys.stdout, "reconfigure"):
@@ -44,14 +46,14 @@ def _parse_one(args: tuple[Path, Path]) -> tuple[str, bool, str]:
 
 def main() -> None:
     parser = argparse.ArgumentParser(description="Batch-parse CS2 demos to parquet.")
-    parser.add_argument("--demo-dir",  default="data/raw/demos",  help="Directory with .dem files")
-    parser.add_argument("--out-dir",   default="data/processed",  help="Output directory for parquets")
+    parser.add_argument("--demo-dir",  default="raw/demos",  help="Directory with .dem files")
+    parser.add_argument("--out-dir",   default="processed",  help="Output directory for parquets")
     parser.add_argument("--workers",   type=int, default=1,        help="Parallel worker processes (default: 1)")
     parser.add_argument("--resume",    action="store_true",        help="Skip demos already parsed")
     args = parser.parse_args()
 
-    demo_dir = Path(args.demo_dir)
-    out_dir  = Path(args.out_dir)
+    demo_dir = resolve_path_input(args.demo_dir)
+    out_dir = resolve_path_input(args.out_dir)
     out_dir.mkdir(parents=True, exist_ok=True)
 
     all_demos = sorted(demo_dir.glob("*.dem"))

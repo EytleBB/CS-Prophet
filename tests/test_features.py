@@ -40,6 +40,19 @@ class TestExtractBombSite:
         result = extract_bomb_site(df).tolist()
         assert result == ["A", "B", "A", "other"]
 
+    def test_prefers_normalized_xyz_columns_when_present(self):
+        df = pd.DataFrame(
+            {
+                "site": [504, 74],
+                "tick": [1000, 2000],
+                "X": [1300.0, -1500.0],
+                "Y": [2200.0, 2500.0],
+                "Z": [0.0, 0.0],
+            }
+        )
+        result = extract_bomb_site(df, map_name="de_dust2").tolist()
+        assert result == ["A", "B"]
+
     def test_returns_series(self):
         df = pd.DataFrame({"site": [0], "tick": [1000]})
         result = extract_bomb_site(df)

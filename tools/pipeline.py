@@ -9,7 +9,7 @@ Usage:
 
 Same config and CLI as download_demos.py. Each demo is:
   1. Downloaded & extracted to a temp dir
-  2. Parsed to parquet → data/processed/
+  2. Parsed to parquet → processed/
   3. .dem deleted immediately
 
 No .dem files accumulate on disk.
@@ -40,6 +40,7 @@ from tools.hltv.parser import get_map_from_dem_filename, parse_match_page, parse
 from tools.hltv.scraper import HLTVScraper
 from tools.hltv.downloader import extract_archive
 from src.parser.demo_parser import parse_demo
+from src.utils.paths import resolve_path_input
 
 
 def _seen_match_ids_from_parquets(processed_dir: Path) -> set[str]:
@@ -54,13 +55,12 @@ def _seen_match_ids_from_parquets(processed_dir: Path) -> set[str]:
 
 def load_config(path: str) -> dict:
     path = os.path.abspath(path)
-    cfg_dir = os.path.dirname(path)
     with open(path, encoding="utf-8") as f:
         cfg = yaml.safe_load(f)
     out = cfg.setdefault("output", {})
-    for key in ("demos_dir", "failed_log"):
-        if key in out and not os.path.isabs(out[key]):
-            out[key] = os.path.normpath(os.path.join(cfg_dir, out[key]))
+    for key in ("demos_dir", "manifest", "failed_log"):
+        if key in out:
+            out[key] = str(resolve_path_input(out[key]))
     return cfg
 
 
@@ -81,8 +81,7 @@ def _already_processed(match_id: str, map_name: str, processed_dir: Path) -> boo
 def run(cfg: dict, dry_run: bool = False) -> None:
     rate_cfg = cfg["rate_limit"]
     out_cfg = cfg["output"]
-    project_root = Path(__file__).resolve().parent.parent
-    processed_dir = project_root / "data" / "processed"
+    processed_dir = resolve_path_input("processed")
     processed_dir.mkdir(parents=True, exist_ok=True)
 
     scraper = HLTVScraper(rate_cfg)

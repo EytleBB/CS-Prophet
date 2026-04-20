@@ -33,10 +33,10 @@ _ZONE_BOXES: Final[dict[str, dict[str, tuple[float, float, float, float]]]] = {
         "mid": ( -900.0,  600.0,  -981.0, 2100.0),
     },
     "de_ancient": {
-        # A site: ruins / main entrance
-        "A":   ( 500.0, 1396.0, -400.0,  600.0),
-        # B site: cave / B short
-        "B":   (-2263.0, -900.0,  200.0, 1728.0),
+        # A site: cave / donut (negative X, northern area)
+        "A":   (-2263.0, -900.0,  200.0, 1728.0),
+        # B site: temple / ruins (positive X, center)
+        "B":   ( 500.0, 1396.0, -400.0,  600.0),
         # mid: middle path / connector
         "mid": ( -900.0,  500.0, -400.0, 1000.0),
     },
@@ -49,10 +49,10 @@ _ZONE_BOXES: Final[dict[str, dict[str, tuple[float, float, float, float]]]] = {
         "mid": (-1800.0,  -600.0,  200.0,  900.0),
     },
     "de_anubis": {
-        # A site: lower left / canal
-        "A":   (-1954.0, -600.0, -400.0,  900.0),
-        # B site: upper right
-        "B":   ( 800.0, 1804.0, 1400.0, 2945.0),
+        # A site: upper right / palace area
+        "A":   ( 800.0, 1804.0, 1400.0, 2945.0),
+        # B site: lower left / canal
+        "B":   (-1954.0, -600.0, -400.0,  900.0),
         # mid: bridge / mid connector
         "mid": ( -600.0,  800.0,  300.0, 1400.0),
     },
@@ -71,6 +71,50 @@ _MAP_BOUNDS: Final[dict[str, tuple[float, float, float, float, float, float]]] =
     "de_overpass": (-3960.0,  -106.0, -3450.0, 1610.0,   -20.0, 640.0),
     "de_anubis":   (-1954.0, 1804.0, -1735.0, 2945.0, -210.0, 180.0),
 }
+
+
+def infer_map_from_positions(positions: list[tuple[float, float, float]]) -> str:
+    """Return the unique map whose bbox contains every non-zero (x,y,z), else ''.
+
+    Used when CS2 process memory doesn't expose the map-name field directly —
+    we reverse-lookup via the bounding boxes already defined for normalisation.
+    """
+    real = [(x, y, z) for x, y, z in positions if not (x == 0.0 and y == 0.0 and z == 0.0)]
+    if not real:
+        return ""
+    hits: list[tuple[str, float]] = []
+    for name, (xmin, xmax, ymin, ymax, zmin, zmax) in _MAP_BOUNDS.items():
+        if all(xmin <= x <= xmax and ymin <= y <= ymax and zmin <= z <= zmax for x, y, z in real):
+            volume = (xmax - xmin) * (ymax - ymin) * (zmax - zmin)
+            hits.append((name, volume))
+    if not hits:
+        return ""
+    hits.sort(key=lambda item: item[1])
+    return hits[0][0]
+
+
+def map_fit_fraction(positions: list[tuple[float, float, float]], map_name: str) -> float:
+    """Return the fraction of non-zero positions that fall within a map bbox."""
+    bounds = _MAP_BOUNDS.get(map_name)
+    if bounds is None:
+        return 0.0
+
+    real = [(x, y, z) for x, y, z in positions if not (x == 0.0 and y == 0.0 and z == 0.0)]
+    if not real:
+        return 0.0
+
+    x_min, x_max, y_min, y_max, z_min, z_max = bounds
+    fits = sum(
+        1
+        for x, y, z in real
+        if x_min <= x <= x_max and y_min <= y <= y_max and z_min <= z <= z_max
+    )
+    return fits / len(real)
+
+
+def positions_fit_map(positions: list[tuple[float, float, float]], map_name: str) -> bool:
+    """Return True when every non-zero position lies within the map bounds."""
+    return map_fit_fraction(positions, map_name) >= 1.0
 
 
 def classify_zone(x: float, y: float, map_name: str, z: Optional[float] = None) -> str:

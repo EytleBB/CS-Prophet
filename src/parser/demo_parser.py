@@ -25,6 +25,7 @@ import pandas as pd
 
 from src.features.label_extractor import extract_bomb_site, get_plant_ticks
 from src.utils.map_utils import normalize_coords
+from src.utils.paths import resolve_path_input
 
 try:
     from demoparser2 import DemoParser
@@ -390,10 +391,13 @@ if __name__ == "__main__":
     import argparse
 
     ap = argparse.ArgumentParser(description="Batch-parse CS2 .dem files to parquet")
-    ap.add_argument("dem_dir", nargs="?", default="data/raw/demos",
+    ap.add_argument("dem_dir", nargs="?", default="raw/demos",
                     help="Directory containing .dem files")
-    ap.add_argument("output_dir", nargs="?", default="data/processed",
+    ap.add_argument("output_dir", nargs="?", default="processed",
                     help="Directory for output parquet files")
     args = ap.parse_args()
-    results = parse_demos_batch(args.dem_dir, args.output_dir)
+    results = parse_demos_batch(
+        resolve_path_input(args.dem_dir),
+        resolve_path_input(args.output_dir),
+    )
     print(f"Done. {len(results)} parquets written.")

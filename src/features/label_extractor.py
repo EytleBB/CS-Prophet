@@ -9,6 +9,18 @@ from src.utils.map_utils import classify_zone
 _SITE_INT_MAP: dict = {0: "A", 1: "B", "A": "A", "B": "B"}
 
 
+def _position_columns(df: pd.DataFrame) -> tuple[str, str, str] | None:
+    """Return whichever planted-position columns are present.
+
+    Older callers may still pass demoparser2-native ``user_X/user_Y/user_Z``.
+    Newer extraction code normalizes these columns to plain ``X/Y/Z``.
+    """
+    for cols in (("X", "Y", "Z"), ("user_X", "user_Y", "user_Z")):
+        if set(cols).issubset(df.columns):
+            return cols
+    return None
+
+
 def extract_bomb_site(
     bomb_planted_df: pd.DataFrame,
     map_name: str = "",
@@ -35,10 +47,13 @@ def extract_bomb_site(
         raise ValueError("bomb_planted_df must contain a 'site' column")
 
     # Strategy 1: position-based (most reliable for CS2 demos)
-    if map_name and {"user_X", "user_Y", "user_Z"}.issubset(bomb_planted_df.columns):
+    pos_cols = _position_columns(bomb_planted_df)
+    if map_name and pos_cols is not None:
+        x_col, y_col, z_col = pos_cols
+
         def _pos_classify(row: pd.Series) -> str:
             zone = classify_zone(
-                row["user_X"], row["user_Y"], map_name, z=row.get("user_Z")
+                row[x_col], row[y_col], map_name, z=row.get(z_col)
             )
             return zone if zone in ("A", "B") else "other"
 

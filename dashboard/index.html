@@ -62,25 +62,39 @@
     }
     .label { color: var(--muted); font-size: 0.85rem; }
     .value { font-size: 1.1rem; font-weight: 600; }
-    .bar {
-      height: 30px;
-      border-radius: 8px;
-      overflow: hidden;
-      display: flex;
+    .chart-wrap {
+      position: relative;
+      width: 100%;
+      height: 180px;
       background: #0f162b;
+      border-radius: 8px;
       border: 1px solid rgba(255,255,255,0.08);
+      overflow: hidden;
     }
-    .bar .a { background: var(--green); }
-    .bar .b { background: var(--blue); }
-    .bar span {
+    .chart-wrap canvas {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+    .chart-legend {
+      position: absolute;
+      top: 6px;
+      right: 10px;
+      font-size: 0.75rem;
       display: flex;
-      align-items: center;
-      justify-content: center;
-      font-weight: 700;
-      color: #0b1323;
-      text-shadow: 0 1px 2px rgba(0,0,0,0.2);
-      font-size: 0.9rem;
-      min-width: 48px;
+      gap: 12px;
+      color: var(--muted);
+      pointer-events: none;
+    }
+    .chart-legend .dot {
+      display: inline-block;
+      width: 10px;
+      height: 10px;
+      border-radius: 2px;
+      vertical-align: middle;
+      margin-right: 4px;
     }
     .confidence {
       display: grid;
@@ -135,10 +149,12 @@
     </div>
 
     <div class="card" style="margin-bottom: 12px;">
-      <div class="label" style="margin-bottom: 8px;">Bombsite Likelihood</div>
-      <div class="bar">
-        <span id="bar-a" class="a" style="width: 50%;">A 50%</span>
-        <span id="bar-b" class="b" style="width: 50%;">B 50%</span>
+      <div class="label" style="margin-bottom: 8px;">Bombsite Likelihood Over Round</div>
+      <div class="chart-wrap">
+        <canvas id="chart"></canvas>
+        <div class="chart-legend">
+          <span>↑ A &nbsp;·&nbsp; ↓ B</span>
+        </div>
       </div>
     </div>
 
@@ -164,24 +180,102 @@
     const tEl = document.getElementById('t');
     const stepsEl = document.getElementById('steps');
     const stateEl = document.getElementById('state');
-    const barA = document.getElementById('bar-a');
-    const barB = document.getElementById('bar-b');
     const confA = document.getElementById('conf-a');
     const confB = document.getElementById('conf-b');
+    const canvas = document.getElementById('chart');
+    const ctx = canvas.getContext('2d');
 
-    function updateBars(a, b) {
-      const total = Math.max(a + b, 1);
-      const pctA = Math.round((a / total) * 100);
-      const pctB = Math.max(0, 100 - pctA);
+    // Rolling history for the current round only. Reset when round changes
+    // or when steps resets downward (new round boundary).
+    const history = [];   // [{step, a, b}]
+    const MAX_STEPS = 180;  // matches _MAX_STEPS in realtime_engine
+    let currentRound = null;
+    let lastSteps = -1;
 
-      barA.style.width = pctA + '%';
-      barB.style.width = pctB + '%';
+    const CSS_GREEN = getComputedStyle(document.documentElement).getPropertyValue('--green').trim() || '#4CAF50';
+    const CSS_BLUE = getComputedStyle(document.documentElement).getPropertyValue('--blue').trim() || '#2196F3';
 
-      barA.textContent = `A ${pctA}%`;
-      barB.textContent = `B ${pctB}%`;
+    function resizeCanvas() {
+      const dpr = window.devicePixelRatio || 1;
+      const rect = canvas.getBoundingClientRect();
+      canvas.width = Math.max(1, Math.floor(rect.width * dpr));
+      canvas.height = Math.max(1, Math.floor(rect.height * dpr));
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    }
+    resizeCanvas();
+    window.addEventListener('resize', () => { resizeCanvas(); draw(); });
 
-      confA.textContent = pctA + '%';
-      confB.textContent = pctB + '%';
+    function draw() {
+      const rect = canvas.getBoundingClientRect();
+      const W = rect.width;
+      const H = rect.height;
+      const padL = 28, padR = 8, padT = 8, padB = 18;
+      const plotW = W - padL - padR;
+      const plotH = H - padT - padB;
+
+      ctx.clearRect(0, 0, W, H);
+
+      // Horizontal grid. Y-axis labels mirror around 50%: top=A 100%,
+      // middle=even, bottom=B 100%, so the single line reads both sides.
+      ctx.strokeStyle = 'rgba(255,255,255,0.08)';
+      ctx.fillStyle = 'rgba(255,255,255,0.4)';
+      ctx.font = '10px "Segoe UI", sans-serif';
+      ctx.lineWidth = 1;
+      const yLabels = ['A 100%', 'A 75%', '50/50', 'B 75%', 'B 100%'];
+      for (let i = 0; i <= 4; i++) {
+        const y = padT + (plotH * i) / 4;
+        ctx.beginPath();
+        ctx.moveTo(padL, y);
+        ctx.lineTo(W - padR, y);
+        ctx.stroke();
+        ctx.textAlign = 'right';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(yLabels[i], padL - 4, y);
+      }
+
+      // 50% reference dashed line emphasis.
+      ctx.strokeStyle = 'rgba(255,255,255,0.15)';
+      ctx.setLineDash([3, 3]);
+      ctx.beginPath();
+      ctx.moveTo(padL, padT + plotH / 2);
+      ctx.lineTo(W - padR, padT + plotH / 2);
+      ctx.stroke();
+      ctx.setLineDash([]);
+
+      // X-axis step labels.
+      ctx.fillStyle = 'rgba(255,255,255,0.4)';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'top';
+      for (const step of [0, 60, 120, 180]) {
+        const x = padL + (plotW * step) / MAX_STEPS;
+        ctx.fillText(step + 's', x, H - padB + 2);
+      }
+
+      if (history.length === 0) return;
+
+      const xFor = step => padL + (plotW * Math.min(step, MAX_STEPS)) / MAX_STEPS;
+      const yFor = prob => padT + plotH * (1 - Math.max(0, Math.min(1, prob)));
+
+      // Single P(A) line. Above 50% leans A (green), below 50% leans B (blue).
+      // Segment-by-segment color swap when crossing the midline.
+      ctx.lineWidth = 2;
+      for (let i = 1; i < history.length; i++) {
+        const prev = history[i - 1];
+        const cur = history[i];
+        const midpoint = (prev.a + cur.a) / 2;
+        ctx.strokeStyle = midpoint >= 0.5 ? CSS_GREEN : CSS_BLUE;
+        ctx.beginPath();
+        ctx.moveTo(xFor(prev.step), yFor(prev.a));
+        ctx.lineTo(xFor(cur.step), yFor(cur.a));
+        ctx.stroke();
+      }
+
+      // Live tip marker.
+      const last = history[history.length - 1];
+      ctx.fillStyle = last.a >= 0.5 ? CSS_GREEN : CSS_BLUE;
+      ctx.beginPath();
+      ctx.arc(xFor(last.step), yFor(last.a), 3.5, 0, Math.PI * 2);
+      ctx.fill();
     }
 
     async function poll() {
@@ -200,9 +294,33 @@
         stepsEl.textContent = data.steps ?? '—';
         stateEl.textContent = 'Connected';
 
+        const round = data.round ?? null;
+        const steps = Number.isFinite(data.steps) ? data.steps : 0;
         const a = Number(data.A) || 0;
         const b = Number(data.B) || 0;
-        updateBars(a, b);
+
+        // Reset history on round change OR when steps reset downward.
+        if (round !== currentRound || steps < lastSteps) {
+          history.length = 0;
+          currentRound = round;
+        }
+        lastSteps = steps;
+
+        // Dedupe on identical step (poll rate faster than step rate).
+        const tail = history[history.length - 1];
+        if (!tail || tail.step !== steps) {
+          history.push({ step: steps, a: a, b: b });
+          if (history.length > MAX_STEPS + 1) history.shift();
+        } else {
+          tail.a = a; tail.b = b;
+        }
+
+        const pctA = Math.round(a * 100);
+        const pctB = Math.max(0, 100 - pctA);
+        confA.textContent = pctA + '%';
+        confB.textContent = pctB + '%';
+
+        draw();
       } catch (err) {
         statusEl.textContent = 'Disconnected';
         statusEl.classList.add('error');

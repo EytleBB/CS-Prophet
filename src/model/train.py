@@ -19,10 +19,23 @@ if __package__ in {None, ""}:
     # Allow `python src/model/train.py` by exposing the repo root as an import base.
     sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 
-from src.features.dataset import RoundSequenceDataset, split_files
+from src.features.dataset import RoundSequenceDataset, split_files as split_files_v1
+from src.features.dataset_v2 import RoundSequenceDatasetV2, split_files as split_files_v2
+from src.features.state_vector import FEATURE_DIM as FEATURE_DIM_V1
+from src.features.state_vector_v2 import FEATURE_DIM as FEATURE_DIM_V2
 from src.model.transformer import BombSiteTransformer
+from src.utils.paths import resolve_path_input
 
 logger = logging.getLogger(__name__)
+
+
+def _dataset_components(schema_version: str):
+    normalized = schema_version.lower()
+    if normalized == "v2":
+        return RoundSequenceDatasetV2, split_files_v2, FEATURE_DIM_V2
+    if normalized == "v1":
+        return RoundSequenceDataset, split_files_v1, FEATURE_DIM_V1
+    raise ValueError(f"Unsupported data.schema_version: {schema_version!r}")
 
 
 class FocalLoss(nn.Module):
@@ -110,10 +123,12 @@ def _label_counts(ds: RoundSequenceDataset) -> dict[str, int]:
     return counts
 
 
-def train(config_path: str = "configs/train_config.yaml") -> None:
+def train(config_path: str = "configs/train_config.yaml", resume: Optional[str] = None) -> None:
     """Run the full training loop using the YAML config at config_path.
 
     Saves the best checkpoint (by validation loss) to ``cfg.logging.save_dir/best.pt``.
+    If ``resume`` is given, loads model (and optimizer/best_val_loss if present)
+    from that checkpoint before training.
     """
     config_path = str(Path(config_path))
     cfg = OmegaConf.load(config_path)
@@ -124,7 +139,16 @@ def train(config_path: str = "configs/train_config.yaml") -> None:
     logger.info("Training on %s", device)
     logger.info("Config: %s", config_path)
 
-    processed_dir = Path(cfg.data.processed_dir)
+    schema_version = str(cfg.data.get("schema_version", "v1"))
+    dataset_cls, split_files, expected_input_dim = _dataset_components(schema_version)
+
+    if int(cfg.model.input_dim) != expected_input_dim:
+        raise ValueError(
+            f"Config model.input_dim={cfg.model.input_dim} does not match "
+            f"{schema_version} feature dim {expected_input_dim}"
+        )
+
+    processed_dir = resolve_path_input(str(cfg.data.processed_dir))
     parquet_files = sorted(processed_dir.glob("*.parquet"))
     if not parquet_files:
         raise FileNotFoundError(f"No parquet files found in {processed_dir}")
@@ -136,10 +160,26 @@ def train(config_path: str = "configs/train_config.yaml") -> None:
         seed=cfg.training.seed,
     )
 
-    train_ds = RoundSequenceDataset(train_files, cfg.data.sequence_length, training=True)
-    val_ds = RoundSequenceDataset(val_files, cfg.data.sequence_length, training=False)
-    train_loader = DataLoader(train_ds, batch_size=cfg.training.batch_size, shuffle=True)
-    val_loader = DataLoader(val_ds, batch_size=cfg.training.batch_size, shuffle=False)
+    train_ds = dataset_cls(train_files, cfg.data.sequence_length, training=True)
+    val_ds = dataset_cls(val_files, cfg.data.sequence_length, training=False)
+    train_workers = int(cfg.training.get("num_workers", 4))
+    val_workers = int(cfg.training.get("val_num_workers", max(0, min(2, train_workers))))
+    train_loader = DataLoader(
+        train_ds,
+        batch_size=cfg.training.batch_size,
+        shuffle=True,
+        num_workers=train_workers,
+        persistent_workers=train_workers > 0,
+        pin_memory=True,
+    )
+    val_loader = DataLoader(
+        val_ds,
+        batch_size=cfg.training.batch_size,
+        shuffle=False,
+        num_workers=val_workers,
+        persistent_workers=val_workers > 0,
+        pin_memory=True,
+    )
     train_counts = _label_counts(train_ds)
     val_counts = _label_counts(val_ds)
     batches_per_epoch = len(train_loader)
@@ -194,6 +234,19 @@ def train(config_path: str = "configs/train_config.yaml") -> None:
     patience: int = cfg.training.get("early_stop_patience", 0)
     no_improve = 0
 
+    if resume:
+        resume_path = Path(resume)
+        ckpt = torch.load(resume_path, map_location=device, weights_only=False)
+        model.load_state_dict(ckpt["model_state"])
+        if "optimizer_state" in ckpt:
+            optimizer.load_state_dict(ckpt["optimizer_state"])
+            logger.info("Resumed optimizer state from %s", resume_path)
+        else:
+            logger.info("Resumed model from %s (no optimizer state — cold optimizer)", resume_path)
+        if "val_loss" in ckpt:
+            best_val_loss = float(ckpt["val_loss"])
+            logger.info("Baseline best_val_loss=%.4f (from checkpoint)", best_val_loss)
+
     for epoch in range(cfg.training.epochs):
         train_loss = _run_epoch(model, train_loader, optimizer, criterion,
                                 scaler, device, use_amp, accum_steps)
@@ -207,6 +260,7 @@ def train(config_path: str = "configs/train_config.yaml") -> None:
                 {
                     "epoch": epoch,
                     "model_state": model.state_dict(),
+                    "optimizer_state": optimizer.state_dict(),
                     "val_loss": val_loss,
                     "model_config": OmegaConf.to_container(cfg.model, resolve=True),
                 },
@@ -281,10 +335,15 @@ if __name__ == "__main__":
         default="configs/train_config.yaml",
         help="Path to the training config YAML",
     )
+    parser.add_argument(
+        "--resume",
+        default=None,
+        help="Path to checkpoint to resume from (loads model + optimizer + best_val_loss baseline)",
+    )
     args = parser.parse_args()
     logging.basicConfig(
         level=logging.INFO,
         format="%(asctime)s  %(levelname)-7s  %(message)s",
         datefmt="%H:%M:%S",
     )
-    train(args.config)
+    train(args.config, resume=args.resume)

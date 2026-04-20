@@ -1,19 +1,63 @@
+# Python cache and test artifacts
 __pycache__/
 *.py[cod]
 *.pyo
 .pytest_cache/
 .coverage
+.ipynb_checkpoints/
+
+# Local agent/tool state
+.claude/
+.codex_task*.txt
+
+# Temporary workdirs and logs
+.tmp/
+pytest-basetemp/
+test-temp/
+tmp*/
+error.log
+runs/
+
+# Repo-local data fallback and generated outputs
 data/raw/demos/
 data/raw/manifest.json
+data/raw/manifest.jsonl
 data/raw/player_cache.json
 data/raw/failed.json
+data/raw/failed.jsonl
 data/processed/
+data/processed_v2/
 data/splits/
+data/viz/
+data/viz_report.html
+data/viz_log.txt
+data/*.log
+data/*.output
+data/*.csv
+data/*.png
+data/*.html
+data/*.jsonl
+data/*.txt
+
+# Local exports and experiment scratch space
+processed_v2_2hz_preplant/
+scratch_v2_export/
+
+# Model and export artifacts
 *.ckpt
 *.onnx
-tools/hltv_secrets.yaml
-tools/portable/
+checkpoints/v2/
+checkpoints/v2_2hz/
 checkpoints/smoke/portable_copy/
 checkpoints/smoke/portable_verify/
 checkpoints/smoke/extract_test/
-.tmp/
+checkpoints/smoke/portable_extract_test/
+
+# Tool outputs and secrets
+tools/hltv_secrets.yaml
+tools/portable/
+tools/data/
+tools/analysis_output/
+tools/analysis_output_smoke/
+tools/compare_output/
+tools/*_report.md
